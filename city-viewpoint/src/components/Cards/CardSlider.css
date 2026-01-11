@@ -1,0 +1,158 @@
+.slider-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40vh;
+  padding: 2rem;
+  box-sizing: border-box;
+  margin: 100px;
+}
+
+.slider-container {
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  overflow: visible;
+}
+
+.card-slider {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  height: 550px;
+  perspective: 1000px;
+  transition: transform 0.5s ease-in-out;
+}
+
+.card {
+  position: absolute;
+  width: 30%; 
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  transition: all 0.5s ease;
+  transform-style: preserve-3d;
+  overflow: visible;
+}
+
+.card-header {
+  padding: 10px 0;
+  position: relative;
+  width: 100%;
+  height: 270px;
+}
+
+.card-header img {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  object-fit: cover;
+  object-position: center;
+}
+
+.card-body {
+  padding: 50px 10px 10px;
+  text-align: center;
+}
+
+.card-body h3 {
+  margin-top: 0;
+  font-size: 18px;
+  color: #111827;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.card-body .name {
+  font-weight: bold;
+  font-size: 14px;
+  color: #6b7280;
+  margin: 6px 0 10px;
+}
+
+.card-body p {
+  font-size: 13px;
+  color: #374151;
+  margin-top: 5px;
+}
+.card-stats {
+  display: flex;
+  justify-content: center;
+  gap: 1rem; 
+  font-size: 15px;
+  color: #555;
+  margin-bottom: 0.5rem;
+}
+
+.card-stats span {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.card-body button {
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.card-body button:hover {
+  opacity: 0.9;
+}
+
+.nav-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.nav-buttons button {
+  margin: 0 5px;
+  padding: 0.7rem 1.4rem;
+  background-color:#a7bd70;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1.7em;
+  transition: all 0.3s ease;
+}
+
+.nav-buttons button:hover {
+  opacity: 0.8;
+}
+
+
+/* Breakpoints */
+@media (min-width: 640px) {
+  .card { width: 60%; }
+}
+
+@media (min-width: 768px) {
+  .card { width: 40%; }
+}
+
+@media (min-width: 1024px) {
+  .card { width: 30%; }
+}
+
+@media (max-width: 768px) {
+  .slider-container { padding: 40px; }
+  .card-header {height: 200px;}
+  .card-header img {width: 200px; height: 200px;}
+  .card-body h3 {font-size: 16px;}
+  .card-body p {margin-bottom: 10px;}
+  .nav-buttons  {margin-top: 3rem;}
+}

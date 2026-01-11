@@ -1,0 +1,122 @@
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color:white;
+    position: sticky;
+    top:0;
+    font-weight: bold;
+    border-bottom: 0.1rem solid rgb(129, 129, 129);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+nav .logo {
+    height: 3vw;
+    margin: 1rem;
+    min-height: 30px;
+}
+
+nav ul {
+    display:flex;
+}
+
+nav ul li {
+    list-style: none;
+}
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+nav .yourCity {
+    color: rgba(8, 133, 5, 0.613);
+    font-size: 1.7rem;
+    font-weight: bold;
+}
+
+nav ul li .reg {
+    color: black;
+    font-weight: 100;
+    display: inline-block;
+    border: 0.2rem solid #a7bd70;
+    padding: 0.5rem 0.7rem;
+    border-radius: 15px;
+    margin-right: 3rem;
+    margin-left: 1rem;;
+}
+
+nav ul li a {
+    display: block;
+    text-decoration: none;
+    color: black;
+    padding: 0.5rem;
+    margin: 0 0.05rem;
+    border-radius: 15px;
+    font-size: 1.5rem;
+    transition: background-color 0.3s ease;
+}
+
+nav ul li a:hover {
+    background-color: #a7bd70;
+}
+
+nav .menu {
+    display: none;
+    position: absolute;
+    top: 1.5rem;
+    right: 1rem;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 2.25rem;
+    height: 1.7rem;
+}
+
+nav .menu span {
+    height: 0.3rem;
+    width: 100%;
+    background-color: rgba(26, 95, 6, 0.589);
+    border-radius: 0.1rem;
+}
+
+@media (max-width:800px){
+    nav .menu{
+        display: flex;
+    }
+
+    nav {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    nav ul {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        margin-bottom: 0.25rem;
+        text-align: center;
+    }
+
+    nav ul.open {
+        display: flex;
+    }
+
+    nav ul li {
+        width: 100%;
+        text-align: center;
+        text-align: center;
+    }
+
+    nav ul li a {
+        margin: 0.2rem 0.5rem;
+        text-align: center;
+    }
+    nav ul li .reg {
+        margin-right: 0;
+        margin-left: 0;
+    }
+
+    nav .yourCity {
+        display: none;
+    }
+}
