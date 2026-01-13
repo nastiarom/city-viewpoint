@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import logo from '/src/assets/logo.png'
 import { useState } from 'react'
 import CitySearch from '../CitySearch/CitySearch'
+import popularCities from '/src/data/popularCities'
 
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false)

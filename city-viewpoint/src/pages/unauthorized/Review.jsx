@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import ReviewHeader from '/src/components/ReviewHeader/ReviewHeader'
+import Footer from '../../components/Footer/Footer';
 function Review() {
   const { id } = useParams();
 
@@ -7,7 +8,8 @@ function Review() {
     <>
       <ReviewHeader />
       <div>Review ID: {id}</div>
-      {/* Здесь загружайте и отображайте данные отзыва по id */}
+      <div>имя </div>
+      <Footer />
     </>
   );
 }

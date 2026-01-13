@@ -7,6 +7,7 @@ import zaraysk from '/src/assets/zaraysk.jpg'
 const reviews = [
 {
     id: 1,
+    author: 10,
     date: "2026-01-05",
     city: "Ярославль",
     like_count: 52,

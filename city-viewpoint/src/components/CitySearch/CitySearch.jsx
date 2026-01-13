@@ -2,16 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CitySearch.css';
 
-function CitySearch({ onSelect }) {
+function CitySearch({ onSelect, initialCities = [] }) {
   const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
+  const [suggestions, setSuggestions] = useState(initialCities);
   const [selectedCity, setSelectedCity] = useState('');
   const timeoutRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (query.length < 2) {
-      setSuggestions([]);
+      setSuggestions(initialCities);
       return;
     }
 

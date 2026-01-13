@@ -52,6 +52,19 @@
   color: #a7bd70;
 }
 
+.footer-button {
+  margin-top: 20%;
+}
+.footer-button button {
+  font-size: 1.2rem;
+  padding: 8px;
+  border-radius: 20px;
+  background-color: #a7bd70;
+}
+.footer-button button a {
+  text-decoration: none;
+  color: rgb(255, 255, 255);
+}
 @media (max-width: 768px) {
 
 .footer {

@@ -1,0 +1,84 @@
+.review-header-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: white;
+  position: sticky;
+  top: 0;
+  font-weight: bold;
+  border-bottom: 0.1rem solid rgb(129, 129, 129);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  padding: 1rem 1rem;
+  min-height: 60px;
+  box-sizing: border-box;
+}
+
+.review-header-back-button {
+  background: none;
+  border: none;
+  color: #088505;
+  font-size: 1.7rem;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  transition: background-color 0.3s ease;
+  min-height: 40px;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  font-weight: lighter;
+}
+
+.review-header-back-button:hover {
+  background-color: #a7bd70;
+  color: rgb(36, 36, 36);
+}
+
+.review-header-nav-center {
+  flex-grow: 1;
+  text-align: center;
+}
+
+.review-header-yourCity {
+  color: rgba(8, 133, 5, 0.613);
+  font-size: 1.7rem;
+  font-weight: bold;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.review-header-nav-right {
+  display: flex;
+  align-items: center;
+}
+
+.review-header-auth-list {
+  display: flex;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.review-header-auth-link {
+  text-decoration: none;
+  color: black;
+  font-size: 1.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 15px;
+  transition: background-color 0.3s ease;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.review-header-auth-link:hover {
+  background-color: #a7bd70;
+  color: black;
+}
+
+.review-header-reg {
+  border: 0.2rem solid #a7bd70;
+  font-weight: 100;
+}

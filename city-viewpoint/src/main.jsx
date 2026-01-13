@@ -8,6 +8,7 @@ import City from './pages/unauthorized/City.jsx'
 import Review from './pages/unauthorized/Review.jsx'
 import ReviewsList from './pages/unauthorized/ReviewsList.jsx'
 import Registration from './pages/unauthorized/Registration.jsx'
+import ModeratorAuthorization from './pages/moderator/ModeratorAuth/ModeratorAuthorization.jsx'
 import ScrollToTop from './components/Assist/ScrollToTop.jsx'
 
 createRoot(document.getElementById('root')).render(
@@ -21,6 +22,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/city" element={<City />} />
         <Route path="/review/:id" element={<Review />} />
         <Route path="/reviewsList" element={<ReviewsList />} />
+        <Route path="/modAuth" element={<ModeratorAuthorization />} />
       </Routes>
    
     </BrowserRouter>
