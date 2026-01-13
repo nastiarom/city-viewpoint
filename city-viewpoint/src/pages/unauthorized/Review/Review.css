@@ -1,0 +1,38 @@
+.review-top-row {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.review-city-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.review-city-block h2 {
+  margin: 0;
+}
+
+.review-region {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.review-tags {
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+
+.review-tag {
+  display: inline-block;
+  background-color: #a7bd70;
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  margin-right: 0.5rem;
+  font-size: 0.85rem;
+}
