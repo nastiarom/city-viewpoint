@@ -1,10 +1,19 @@
 import { useParams } from 'react-router-dom';
-import { FaStar } from 'react-icons/fa';
 import ReviewHeader from '/src/components/ReviewHeader/ReviewHeader';
 import Footer from '../../../components/Footer/Footer';
 import reviews from '../../../data/reviews';
 import reviewsText from '../../../data/reviews_text';
+import users from '../../../data/users';
+import { FaStar } from 'react-icons/fa';
 import './Review.css';
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}.${month}.${year}`;
+}
 
 function Stars({ rating }) {
   const totalStars = 5;
@@ -14,11 +23,31 @@ function Stars({ rating }) {
       {[...Array(totalStars)].map((_, i) => (
         <FaStar
           key={i}
-          style={{ color: i < rating ? '#f5ce0bff' : '#ccc' }}
+          style={{ color: i < rating ? '#f5ce0bff' : '#ccc' , fontSize:'1.8rem'}}
         />
       ))}
     </span>
   );
+}
+
+function getSeasonClass(season) {
+  switch (season.toLowerCase()) {
+    case 'весна':
+    case 'spring':
+      return 'season-spring';
+    case 'лето':
+    case 'summer':
+      return 'season-summer';
+    case 'осень':
+    case 'autumn':
+    case 'fall':
+      return 'season-autumn';
+    case 'зима':
+    case 'winter':
+      return 'season-winter';
+    default:
+      return '';
+  }
 }
 
 function Review() {
@@ -37,14 +66,31 @@ function Review() {
     );
   }
 
+  const user = users.find(u => u.id === review.author);
+  const nickname = user ? user.nickname : `Пользователь ID: ${review.author}`;
+
   return (
     <>
       <ReviewHeader />
-      <main style={{ maxWidth: '800px', margin: '2rem auto', padding: '0 1rem' }}>
+      <main style={{ maxWidth: '1000px', margin: '2rem auto', padding: '0 1rem' }}>
         <div className="review-top-row">
-          <div>Пользователь ID: {review.author}</div>
-          <div>Дата: {review.date}</div>
-          <div>Сезон: {review.season}</div>
+            <div style={{ display: 'flex', alignItems: 'center', fontSize: '20px' }}>
+    <span className="user-photo-circle">
+      {user && user.photo ? (
+        <img src={user.photo} alt={`Фото пользователя ${nickname}`} />
+      ) : (
+        <img
+          src="/default-user-photo.png"
+          alt="Фото по умолчанию"
+        />
+      )}
+    </span>
+    {nickname}
+  </div>
+          <div style={{fontSize: '20px', fontWeight: 'lighter'}}>{formatDate(review.date)}</div>
+          <div>
+            <span className={`season-circle ${getSeasonClass(review.season)}`}>{review.season}</span>
+          </div>
         </div>
         <div className="review-city-block">
           <h2>{review.city}</h2>
@@ -57,7 +103,8 @@ function Review() {
             ))}
           </div>
         </div>
-        <p>
+        <div className='review-ratings'>
+          <p>
           <Stars rating={review.transport} />
           <strong>Транспорт</strong>
         </p>
@@ -81,7 +128,8 @@ function Review() {
           <Stars rating={review.price_quality_ratio} />
           <strong>Соотношение цена/качество</strong>
         </p>
-        <p><strong>Бюджет:</strong> {review.budget} ₽</p>
+        </div>
+        <p><strong>Бюджет:</strong> {review.budget.toLocaleString('de-DE')} ₽</p>
         <p><strong>Тип поездки:</strong> {review.type}</p>
         <p><strong>С детьми:</strong> {review.with_kids ? 'Да' : 'Нет'}</p>
         <p><strong>С животными:</strong> {review.with_pets ? `Да, питомец: ${review.pet}` : 'Нет'}</p>
@@ -95,6 +143,7 @@ function Review() {
           alt={`Фото города ${review.city}`} 
           style={{ maxWidth: '100%', borderRadius: '8px', marginTop: '1rem' }} 
         />
+
         {reviewText && (
           <section className="review-text-sections" style={{ marginTop: '2rem' }}>
             <h3>Общее</h3>

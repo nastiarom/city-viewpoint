@@ -3,6 +3,8 @@
   gap: 2rem;
   margin-bottom: 1rem;
   font-weight: bold;
+  font-size: 200%;
+  align-items: center;
 }
 
 .review-city-block {
@@ -15,6 +17,7 @@
 
 .review-city-block h2 {
   margin: 0;
+  font-size: 30px;
 }
 
 .review-region {
@@ -23,16 +26,73 @@
 }
 
 .review-tags {
-  font-size: 0.95rem;
-  margin-top: 0.5rem;
+  margin-top: 0.7rem;
 }
 
 .review-tag {
   display: inline-block;
   background-color: #a7bd70;
   color: white;
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
   margin-right: 0.5rem;
-  font-size: 0.85rem;
+  font-size: 1.5rem;
+}
+
+.review-region {
+    font-size: 1.4rem;
+    margin-top: 0.5rem;
+}
+
+.review-ratings {
+    font-size: 1.5rem;
+}
+
+.review-ratings p{
+    margin-bottom: 0.6rem;
+}
+.review-ratings strong{
+    margin-left: 0.6rem;
+}
+.season-circle {
+  display: inline-block;
+  color: white;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  margin-right: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.season-spring {
+  background-color: #7bc74d;
+}
+
+.season-summer {
+  background-color: #ff5462;
+}
+
+.season-autumn {
+  background-color: #d9743f;
+}
+
+.season-winter {
+  background-color: #6ca0dc; 
+}
+
+.user-photo-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+  border: 1.5px solid #a7bd70;
+}
+
+.user-photo-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }

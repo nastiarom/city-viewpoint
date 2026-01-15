@@ -111,7 +111,7 @@ const reviews = [
 },
 {
     id:5,
-    author: 50,
+    author: 40,
     date: "2025-04-25",
     city: "Зарайск",
     region: "Московская Область",
