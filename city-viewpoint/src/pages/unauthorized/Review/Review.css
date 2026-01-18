@@ -17,7 +17,7 @@
 
 .review-city-block h2 {
   margin: 0;
-  font-size: 30px;
+  font-size: 32px;
 }
 
 .review-region {
@@ -46,6 +46,7 @@
 
 .review-ratings {
     font-size: 1.5rem;
+    color: #3f3e3e;
 }
 
 .review-ratings p{
@@ -53,6 +54,10 @@
 }
 .review-ratings strong{
     margin-left: 0.6rem;
+}
+
+.review-peculiarities {
+  font-size: 2rem;
 }
 .season-circle {
   display: inline-block;

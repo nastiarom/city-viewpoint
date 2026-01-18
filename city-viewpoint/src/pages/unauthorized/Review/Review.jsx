@@ -5,6 +5,9 @@ import reviews from '../../../data/reviews';
 import reviewsText from '../../../data/reviews_text';
 import users from '../../../data/users';
 import { FaStar } from 'react-icons/fa';
+import { TbMoneybag } from "react-icons/tb";
+import { FaRankingStar } from "react-icons/fa6";
+import { FcLike } from "react-icons/fc";
 import './Review.css';
 
 function formatDate(dateString) {
@@ -23,7 +26,7 @@ function Stars({ rating }) {
       {[...Array(totalStars)].map((_, i) => (
         <FaStar
           key={i}
-          style={{ color: i < rating ? '#f5ce0bff' : '#ccc' , fontSize:'1.8rem'}}
+          style={{ color: i < rating ? '#f5ce0bff' : '#ccc', fontSize: '1.8rem' }}
         />
       ))}
     </span>
@@ -74,20 +77,20 @@ function Review() {
       <ReviewHeader />
       <main style={{ maxWidth: '1000px', margin: '2rem auto', padding: '0 1rem' }}>
         <div className="review-top-row">
-            <div style={{ display: 'flex', alignItems: 'center', fontSize: '20px' }}>
-    <span className="user-photo-circle">
-      {user && user.photo ? (
-        <img src={user.photo} alt={`Фото пользователя ${nickname}`} />
-      ) : (
-        <img
-          src="/default-user-photo.png"
-          alt="Фото по умолчанию"
-        />
-      )}
-    </span>
-    {nickname}
-  </div>
-          <div style={{fontSize: '20px', fontWeight: 'lighter'}}>{formatDate(review.date)}</div>
+          <div style={{ display: 'flex', alignItems: 'center', fontSize: '18px', fontWeight: 'lighter' }}>
+            <span className="user-photo-circle">
+              {user && user.photo ? (
+                <img src={user.photo} alt={`Фото пользователя ${nickname}`} />
+              ) : (
+                <img
+                  src="/default-user-photo.png"
+                  alt="Фото по умолчанию"
+                />
+              )}
+            </span>
+            {nickname}
+          </div>
+          <div style={{ fontSize: '18px', fontWeight: 'lighter' }}>{formatDate(review.date)}</div>
           <div>
             <span className={`season-circle ${getSeasonClass(review.season)}`}>{review.season}</span>
           </div>
@@ -105,44 +108,69 @@ function Review() {
         </div>
         <div className='review-ratings'>
           <p>
-          <Stars rating={review.transport} />
-          <strong>Транспорт</strong>
-        </p>
-        <p>
-          <Stars rating={review.cleanliness} />
-          <strong>Чистота</strong>
-        </p>
-        <p>
-          <Stars rating={review.preservation} />
-          <strong>Сохранность исторических сооружений</strong>
-        </p>
-        <p>
-          <Stars rating={review.safety} />
-          <strong>Безопасность</strong>
-        </p>
-        <p>
-          <Stars rating={review.hospitality} />
-          <strong>Гостеприимство</strong>
-        </p>
-        <p>
-          <Stars rating={review.price_quality_ratio} />
-          <strong>Соотношение цена/качество</strong>
-        </p>
+            <Stars rating={review.transport} />
+            <strong>Транспорт</strong>
+          </p>
+          <p>
+            <Stars rating={review.cleanliness} />
+            <strong>Чистота</strong>
+          </p>
+          <p>
+            <Stars rating={review.preservation} />
+            <strong>Сохранность исторических сооружений</strong>
+          </p>
+          <p>
+            <Stars rating={review.safety} />
+            <strong>Безопасность</strong>
+          </p>
+          <p>
+            <Stars rating={review.hospitality} />
+            <strong>Гостеприимство</strong>
+          </p>
+          <p>
+            <Stars rating={review.price_quality_ratio} />
+            <strong>Соотношение цена/качество</strong>
+          </p>
+          <p style={{marginTop:'1rem'}}><strong><FaRankingStar style={{marginRight:'4px', fontSize:'2rem'}} />Общая оценка города: </strong>{review.city_rating}</p>
         </div>
-        <p><strong>Бюджет:</strong> {review.budget.toLocaleString('de-DE')} ₽</p>
-        <p><strong>Тип поездки:</strong> {review.type}</p>
-        <p><strong>С детьми:</strong> {review.with_kids ? 'Да' : 'Нет'}</p>
-        <p><strong>С животными:</strong> {review.with_pets ? `Да, питомец: ${review.pet}` : 'Нет'}</p>
-        <p><strong>Командировка:</strong> {review.buisness_trip ? 'Да' : 'Нет'}</p>
-        <p><strong>Для людей с ограниченными возможностями:</strong> {review.physically_challenged ? 'Да' : 'Нет'}</p>
-        <p><strong>Количество лайков:</strong> {review.like_count}</p>
-        <p><strong>Рейтинг города:</strong> {review.city_rating}</p>
-
-        <img 
-          src={review.main_photo} 
-          alt={`Фото города ${review.city}`} 
-          style={{ maxWidth: '100%', borderRadius: '8px', marginTop: '1rem' }} 
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '2rem', marginBottom: '1.2rem', marginTop: '1.2rem' }}>
+          <TbMoneybag style={{ fontSize: '2.5rem' }} />
+          <p><strong></strong> {review.budget.toLocaleString('de-DE')} ₽</p>
+        </div>
+        <div
+          className="review-trip-info"
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '0.5rem',
+            marginBottom: '1rem',
+          }}
+        >
+          {[
+            review.type && { label: review.type },
+            review.with_kids && { label: 'С детьми' },
+            review.with_pets && { label: 'С животными' },
+            review.with_pets && { label: review.pet },
+            review.buisness_trip && { label: 'Деловая поездка' },
+            review.physically_challenged && { label: 'С ограниченными возможностями' },
+          ]
+            .filter(Boolean)
+            .map(({ label, value }, idx) => (
+              <div
+                key={idx}
+                style={{
+                  border: '1px solid #ccc',
+                  borderRadius: '50px',
+                  padding: '0.3rem 0.8rem',
+                  fontSize: '1.5rem',
+                  whiteSpace: 'nowrap',
+                  fontWeight: 'lighter'
+                }}
+              >
+                <strong>{label}</strong> {value}
+              </div>
+            ))}
+        </div>
 
         {reviewText && (
           <section className="review-text-sections" style={{ marginTop: '2rem' }}>
@@ -167,8 +195,15 @@ function Review() {
                 <p>{text}</p>
               </div>
             ))}
+                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}><FcLike style={{fontSize:'3rem'}}/><p style={{fontSize:'1.8rem'}}> {review.like_count}</p></div>
+                <p style={{color:'gray', marginTop: '2rem'}}><i>{nickname}, {formatDate(review.date)}</i> </p>
           </section>
         )}
+                            <img
+          src={review.main_photo}
+          alt={`Фото города ${review.city}`}
+          style={{ maxWidth: '100%', borderRadius: '8px', marginTop: '1rem' }}
+        />
       </main>
       <Footer />
     </>
