@@ -101,3 +101,13 @@
   object-fit: cover;
   display: block;
 }
+
+.review-text-sections h3{
+  font-size: 2rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+.review-text-sections p{
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}

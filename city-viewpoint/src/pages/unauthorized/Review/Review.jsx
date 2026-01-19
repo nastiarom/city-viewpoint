@@ -52,6 +52,23 @@ function getSeasonClass(season) {
       return '';
   }
 }
+function getStatusStyles(status) {
+  switch (status) {
+    case 'Новичок':
+      return { borderColor:'#4ed40f', backgroundColor: '#c1f8b0', color: '#06ad00'};
+    case 'Исследователь':
+      return { borderColor:'#ffe371', backgroundColor: '#fcf2b4', color: '#f0c000' };
+    case 'Пилигрим':
+      return {  borderColor:'#40c2ff', backgroundColor: '#c3edfc', color: '#14aef5' };
+    case 'Легенда дорог':
+      return { borderColor: '#9c27b0', backgroundColor: '#f3e5f5', color: '#6a1b9a' };
+    case 'Вечный странник':
+      return { borderColor: '#f44336', backgroundColor: '#ffebee', color: '#c62828' };
+    default:
+      return { borderColor: '#ccc', backgroundColor: '#f5f5f5', color: '#666' };
+  }
+}
+
 
 function Review() {
   const { id } = useParams();
@@ -88,7 +105,28 @@ function Review() {
                 />
               )}
             </span>
-            {nickname}
+            <div>
+              {nickname}
+              {user && user.status && (
+                <span
+                  style={{
+                    marginTop: '4px',
+                    marginLeft: '1rem',
+                    padding: '2px 8px',
+                    border: `0.2rem solid ${getStatusStyles(user.status).borderColor}`,
+                    borderRadius: '8px',
+                    fontSize: '1.1rem',
+                    fontWeight: 'bold',
+                    color: getStatusStyles(user.status).color,
+                    backgroundColor: getStatusStyles(user.status).backgroundColor,
+                    alignSelf: 'flex-start',
+                    userSelect: 'none',
+                  }}
+                >
+                  {user.status}
+                </span>
+              )}
+            </div>
           </div>
           <div style={{ fontSize: '18px', fontWeight: 'lighter' }}>{formatDate(review.date)}</div>
           <div>
@@ -131,7 +169,7 @@ function Review() {
             <Stars rating={review.price_quality_ratio} />
             <strong>Соотношение цена/качество</strong>
           </p>
-          <p style={{marginTop:'1rem'}}><strong><FaRankingStar style={{marginRight:'4px', fontSize:'2rem'}} />Общая оценка города: </strong>{review.city_rating}</p>
+          <p style={{ marginTop: '1rem' }}><strong><FaRankingStar style={{ marginRight: '4px', fontSize: '2rem' }} />Общая оценка города: </strong>{review.city_rating}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '2rem', marginBottom: '1.2rem', marginTop: '1.2rem' }}>
           <TbMoneybag style={{ fontSize: '2.5rem' }} />
@@ -162,7 +200,7 @@ function Review() {
                   border: '1px solid #ccc',
                   borderRadius: '50px',
                   padding: '0.3rem 0.8rem',
-                  fontSize: '1.5rem',
+                  fontSize: '1.4rem',
                   whiteSpace: 'nowrap',
                   fontWeight: 'lighter'
                 }}
@@ -172,38 +210,135 @@ function Review() {
             ))}
         </div>
 
-        {reviewText && (
-          <section className="review-text-sections" style={{ marginTop: '2rem' }}>
-            <h3>Общее</h3>
-            <p>{reviewText.general}</p>
-
-            <h3>Еда</h3>
-            <p>{reviewText.food}</p>
-
-            <h3>Проживание</h3>
-            <p>{reviewText.accommodation}</p>
-
-            <h3>Достопримечательности</h3>
-            <p>{reviewText.lions}</p>
-
-            <h3>Особенности</h3>
-            <p>{reviewText.peculiarities}</p>
-
-            {reviewText.custom && reviewText.custom.length > 0 && reviewText.custom.map(({ name, text }, idx) => (
-              <div key={idx} style={{ marginTop: '1rem' }}>
-                <h3>{name}</h3>
-                <p>{text}</p>
-              </div>
-            ))}
-                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}><FcLike style={{fontSize:'3rem'}}/><p style={{fontSize:'1.8rem'}}> {review.like_count}</p></div>
-                <p style={{color:'gray', marginTop: '2rem'}}><i>{nickname}, {formatDate(review.date)}</i> </p>
-          </section>
-        )}
-                            <img
+     {reviewText && (
+  <section className="review-text-sections" style={{ marginTop: '2rem' }}>
+    <h3>Общее</h3>
+    <p>{reviewText.general}</p>
+    <div style={{
+      display: 'flex',
+      gap: '0.5rem',
+      overflowX: 'auto',
+      paddingBottom: '0.3rem',
+      marginBottom: '2rem',
+    }}>
+      {review.main_photo && (
+        <img
           src={review.main_photo}
           alt={`Фото города ${review.city}`}
-          style={{ maxWidth: '100%', borderRadius: '8px', marginTop: '1rem' }}
+          style={{ height: '40rem', borderRadius: '8px', flexShrink: 0, objectFit: 'cover' }}
         />
+      )}
+      {reviewText.general_photos && reviewText.general_photos.map((photo, idx) => (
+        <img
+          key={idx}
+          src={photo}
+          alt={`Фото к разделу Общее ${idx + 1}`}
+          style={{ height: '40rem', borderRadius: '8px', flexShrink: 0, objectFit: 'cover' }}
+        />
+      ))}
+    </div>
+    <h3>Еда</h3>
+    <p>{reviewText.food}</p>
+    <div style={{
+      display: 'flex',
+      gap: '0.5rem',
+      overflowX: 'auto',
+      paddingBottom: '0.3rem',
+      marginBottom: '2rem',
+    }}>
+      {reviewText.food_photos && reviewText.food_photos.map((photo, idx) => (
+        <img
+          key={idx}
+          src={photo}
+          alt={`Фото к разделу Еда ${idx + 1}`}
+          style={{ height: '40rem', borderRadius: '8px', flexShrink: 0, objectFit: 'cover' }}
+        />
+      ))}
+    </div>
+
+    <h3>Проживание</h3>
+    <p>{reviewText.accommodation}</p>
+    <div style={{
+      display: 'flex',
+      gap: '0.5rem',
+      overflowX: 'auto',
+      paddingBottom: '0.3rem',
+      marginBottom: '2rem',
+    }}>
+      {reviewText.accommodation_photos && reviewText.accommodation_photos.map((photo, idx) => (
+        <img
+          key={idx}
+          src={photo}
+          alt={`Фото к разделу Проживание ${idx + 1}`}
+          style={{ height: '40rem', borderRadius: '8px', flexShrink: 0, objectFit: 'cover' }}
+        />
+      ))}
+    </div>
+
+    <h3>Достопримечательности</h3>
+    <p>{reviewText.lions}</p>
+    <div style={{
+      display: 'flex',
+      gap: '0.5rem',
+      overflowX: 'auto',
+      paddingBottom: '0.3rem',
+      marginBottom: '2rem',
+    }}>
+      {reviewText.lions_photos && reviewText.lions_photos.map((photo, idx) => (
+        <img
+          key={idx}
+          src={photo}
+          alt={`Фото к разделу Достопримечательности ${idx + 1}`}
+          style={{ height: '40rem', borderRadius: '8px', flexShrink: 0, objectFit: 'cover' }}
+        />
+      ))}
+    </div>
+
+    <h3>Особенности</h3>
+    <p>{reviewText.peculiarities}</p>
+    <div style={{
+      display: 'flex',
+      gap: '0.5rem',
+      overflowX: 'auto',
+      paddingBottom: '0.3rem',
+      marginBottom: '2rem',
+    }}>
+      {reviewText.peculiarities_photos && reviewText.peculiarities_photos.map((photo, idx) => (
+        <img
+          key={idx}
+          src={photo}
+          alt={`Фото к разделу Особенности ${idx + 1}`}
+          style={{ height: '40rem', borderRadius: '8px', flexShrink: 0, objectFit: 'cover' }}
+        />
+      ))}
+    </div>
+    {reviewText.custom && reviewText.custom.length > 0 && reviewText.custom.map(({ name, text, photos }, idx) => (
+      <div key={idx} style={{ marginTop: '1rem', marginBottom: '2rem' }}>
+        <h3>{name}</h3>
+        <p>{text}</p>
+        {photos && photos.length > 0 && (
+          <div style={{
+            display: 'flex',
+            gap: '0.5rem',
+            overflowX: 'auto',
+            paddingBottom: '0.3rem',
+          }}>
+            {photos.map((photo, pidx) => (
+              <img
+                key={pidx}
+                src={photo}
+                alt={`Фото к разделу ${name} ${pidx + 1}`}
+                style={{ height: '40rem', borderRadius: '8px', flexShrink: 0, objectFit: 'cover' }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    ))}
+  </section>
+)}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop:'4rem' }}><FcLike style={{ fontSize: '3rem' }} /><p style={{ fontSize: '1.8rem' }}> {review.like_count}</p></div>
+            <p style={{ color: 'gray', marginTop: '2rem' }}><i>{nickname}, {formatDate(review.date)}</i> </p>
       </main>
       <Footer />
     </>

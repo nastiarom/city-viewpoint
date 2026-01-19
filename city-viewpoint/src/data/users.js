@@ -22,7 +22,7 @@ const users = [
     password: "12345",
     photo: pic_2,
     city: "Иркутск",
-    status: "Пилигрим",
+    status: "Новичок",
     agreement_pd: true,
     agreement_ea: true
 },

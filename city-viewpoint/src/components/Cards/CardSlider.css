@@ -115,15 +115,16 @@
   display: flex;
   justify-content: center;
   margin-top: 2rem;
+  margin-bottom: 5rem;
 }
 
 .nav-buttons button {
   margin: 0 5px;
-  padding: 0.7rem 1.4rem;
+  padding: 0.4rem 1.3rem;
   background-color:#a7bd70;
   color: #fff;
   border: none;
-  border-radius: 20px;
+  border-radius: 50px;
   cursor: pointer;
   font-weight: bold;
   font-size: 1.7em;
