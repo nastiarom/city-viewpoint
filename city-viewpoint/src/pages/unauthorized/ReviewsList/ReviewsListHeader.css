@@ -16,11 +16,11 @@
 .reviews-header-back-button {
   background: none;
   border: none;
-  color: #088505;
+  color:  #a7bd70;
   font-size: 1.7rem;
   font-weight: bold;
   cursor: pointer;
-  padding: 0.5rem 1rem;
+  padding: 0.3rem 0.8rem;
   border-radius: 20px;
   transition: background-color 0.3s ease;
   min-height: 40px;
@@ -28,11 +28,12 @@
   display: flex;
   align-items: center;
   font-weight: lighter;
+  margin-left: 0.6rem;
 }
 
 .reviews-header-back-button:hover {
   background-color: #a7bd70;
-  color: rgb(36, 36, 36);
+  color: rgb(7, 61, 7);
 }
 
 .reviews-header-nav-center {

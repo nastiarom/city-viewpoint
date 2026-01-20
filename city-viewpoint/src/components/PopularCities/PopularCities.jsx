@@ -1,5 +1,5 @@
 import React from 'react';
-import cities from '../../data/cities';
+import cities from '../../data/popularCities';
 import './PopularCities.css';
 import { Link } from 'react-router-dom'
 

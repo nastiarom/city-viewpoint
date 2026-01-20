@@ -13,7 +13,7 @@ function ReviewsListHeader() {
         <nav>
             <div className="reviews-nav-left" style={{ display: 'flex' }}>
                 <button
-                    className="review-header-back-button"
+                    className="reviews-header-back-button"
                     onClick={() => navigate('/')}
                     aria-label="Назад на главную"
                 >

@@ -28,7 +28,6 @@ function App() {
     if (text === 'Города') {
       setCityModalOpen(true);
     }
-    // Можно добавить обработку для других кнопок
   };
 
   return (

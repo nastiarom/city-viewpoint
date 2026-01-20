@@ -47,7 +47,7 @@ function CitySearch({ onSelect, initialCities = [] }) {
   const handleSearch = () => {
     if (!selectedCity) return;
     if (onSelect) onSelect(selectedCity);
-    navigate(`reviewsList?city=${encodeURIComponent(selectedCity)}`);
+    navigate(`/reviewsList?city=${encodeURIComponent(selectedCity)}`);
   };
 
   const handleKeyDown = (e) => {
