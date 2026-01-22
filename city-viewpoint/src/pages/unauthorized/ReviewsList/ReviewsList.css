@@ -1,0 +1,39 @@
+.custom-checkbox {
+  position: relative;
+  display: block;
+  cursor: pointer;
+  font-size: 1.4rem;
+  padding-left: 25px;
+  user-select: none;
+  margin-bottom: 0.8rem;
+}
+
+.custom-checkbox input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+.custom-checkbox .checkmark {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 17px;
+  width: 17px;
+  background-color: transparent;
+  border: 1.5px solid #a7bd70; 
+  border-radius: 4px;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.custom-checkbox:hover .checkmark {
+  border-color: #388e3c;
+}
+
+/* Когда чекбокс выбран — фон зелёный */
+.custom-checkbox input[type="checkbox"]:checked ~ .checkmark {
+  background-color: #a7bd70; 
+  border-color: #4caf50;
+}

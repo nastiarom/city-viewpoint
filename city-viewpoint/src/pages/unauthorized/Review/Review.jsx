@@ -175,40 +175,42 @@ function Review() {
           <TbMoneybag style={{ fontSize: '2.5rem' }} />
           <p><strong></strong> {review.budget.toLocaleString('de-DE')} ₽</p>
         </div>
-        <div
-          className="review-trip-info"
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '0.5rem',
-            marginBottom: '1rem',
-          }}
-        >
-          {[
-            review.type && { label: review.type },
-            review.with_kids && { label: 'С детьми' },
-            review.with_pets && { label: 'С животными' },
-            review.with_pets && { label: review.pet },
-            review.buisness_trip && { label: 'Деловая поездка' },
-            review.physically_challenged && { label: 'С ограниченными возможностями' },
-          ]
-            .filter(Boolean)
-            .map(({ label, value }, idx) => (
-              <div
-                key={idx}
-                style={{
-                  border: '1px solid #ccc',
-                  borderRadius: '50px',
-                  padding: '0.3rem 0.8rem',
-                  fontSize: '1.4rem',
-                  whiteSpace: 'nowrap',
-                  fontWeight: 'lighter'
-                }}
-              >
-                <strong>{label}</strong> {value}
-              </div>
-            ))}
-        </div>
+     <div
+  className="review-trip-info"
+  style={{
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.5rem',
+    marginBottom: '1rem',
+  }}
+>
+  {[
+    review.type && { label: review.type },
+    review.with_little_kids && { label: 'С младенцем' },
+    review.with_pets && { label: 'С животными' },
+    review.with_pets && review.pet && { label: review.pet },
+    review.physically_challenged && { label: 'Путешественники с ограниченными возможностями' },
+    review.limited_mobility && { label: 'Ограниченная мобильность' },
+    review.eldery_people && { label: 'Пожилые путешественники' },
+    review.special_diet && { label: 'Особая диета' },
+  ]
+    .filter(Boolean)
+    .map(({ label }, idx) => (
+      <div
+        key={idx}
+        style={{
+          border: '1px solid #ccc',
+          borderRadius: '50px',
+          padding: '0.3rem 0.8rem',
+          fontSize: '1.4rem',
+          whiteSpace: 'nowrap',
+          fontWeight: 'lighter',
+        }}
+      >
+        <strong>{label}</strong>
+      </div>
+    ))}
+</div>
 
      {reviewText && (
   <section className="review-text-sections" style={{ marginTop: '2rem' }}>

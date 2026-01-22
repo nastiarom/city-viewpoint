@@ -10,7 +10,7 @@ function ReviewsListHeader() {
     const [selectedCity, setSelectedCity] = useState('');
     const navigate = useNavigate()
     return (
-        <nav>
+        <nav className='reviews-header-nav'>
             <div className="reviews-nav-left" style={{ display: 'flex' }}>
                 <button
                     className="reviews-header-back-button"
@@ -32,8 +32,8 @@ function ReviewsListHeader() {
                     <span></span>
                 </div>
                 <ul className={menuOpen ? "open" : ""}>
-                    <li><Link to="authorization">Вход</Link></li>
-                    <li><Link to="registration" className='reg'>Регистрация</Link></li>
+                    <li><Link to="/authorization">Вход</Link></li>
+                    <li><Link to="/registration" className='reg'>Регистрация</Link></li>
                 </ul>
             </div>
         </nav>
