@@ -11,7 +11,7 @@ import { FcLike } from "react-icons/fc";
 import './Review.css';
 import { useState } from 'react';
 import commentsData from '../../../data/comments';
-
+import ReviewMap from '../../../components/ReviewMap';
 
 function formatDate(dateString) {
   const date = new Date(dateString);
@@ -152,7 +152,21 @@ function Review() {
         );
       });
   };
+  const allPlaces = [
+    ...(reviewText.general_places || []),
+    ...(reviewText.food_places || []),
+    ...(reviewText.accommodation_places || []),
+    ...(reviewText.lions_places || []),
+    ...(reviewText.peculiarities_places || []),
+  ];
 
+  if (reviewText.custom && Array.isArray(reviewText.custom)) {
+    reviewText.custom.forEach(customSection => {
+      if (customSection.places && Array.isArray(customSection.places)) {
+        allPlaces.push(...customSection.places);
+      }
+    });
+  }
   return (
     <>
       <ReviewHeader />
@@ -303,6 +317,7 @@ function Review() {
                 />
               ))}
             </div>
+
             <h3>Еда</h3>
             <p>{reviewText.food}</p>
             <div style={{
@@ -321,7 +336,6 @@ function Review() {
                 />
               ))}
             </div>
-
             <h3>Проживание</h3>
             <p>{reviewText.accommodation}</p>
             <div style={{
@@ -340,7 +354,6 @@ function Review() {
                 />
               ))}
             </div>
-
             <h3>Достопримечательности</h3>
             <p>{reviewText.lions}</p>
             <div style={{
@@ -359,7 +372,6 @@ function Review() {
                 />
               ))}
             </div>
-
             <h3>Особенности</h3>
             <p>{reviewText.peculiarities}</p>
             <div style={{
@@ -403,6 +415,14 @@ function Review() {
             ))}
           </section>
         )}
+        <div>
+          <h2 style={{marginBottom:'1rem'}}>Места на карте</h2>
+          {allPlaces.length > 0 ? (
+            <ReviewMap places={allPlaces} />
+          ) : (
+            <></>
+          )}
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '4rem' }}><FcLike style={{ fontSize: '3rem' }} /><p style={{ fontSize: '1.8rem' }}> {review.like_count}</p></div>
         <p style={{ color: 'gray', marginTop: '2rem' }}><i>{nickname}, {formatDate(review.date)}</i> </p>
         <div style={{ marginTop: '3rem', marginBottom: '3rem' }}>
