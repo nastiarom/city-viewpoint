@@ -48,7 +48,7 @@ const CardSlider = () => {
         <div className='slider-wrapper'>
             <div className="slider-container">
                 <div className="card-slider">
-                    {reviews.map((card, index) => (
+                    {reviews.slice(0 , 5).map((card, index) => (
                         <div 
                         key={index}
                         className='card'

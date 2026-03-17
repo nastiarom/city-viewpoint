@@ -418,7 +418,7 @@ function Review() {
         <div>
           <h2 style={{marginBottom:'1rem'}}>Места на карте</h2>
           {allPlaces.length > 0 ? (
-            <ReviewMap places={allPlaces} />
+           <ReviewMap places={allPlaces} />
           ) : (
             <></>
           )}

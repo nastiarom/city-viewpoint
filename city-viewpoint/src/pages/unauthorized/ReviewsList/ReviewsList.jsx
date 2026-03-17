@@ -34,11 +34,15 @@ function ReviewsList() {
   const cityReviews = reviews.filter(
     r => r.city.toLowerCase() === cityParam.toLowerCase()
   );
+  const [selectedRegion, setSelectedRegion] = useState('');
+  const regions = Array.from(new Set(cityReviews.map(r => r.region))).filter(Boolean);
+
   const [selectedRating, setSelectedRating] = useState(null);
   const [budgetRange, setBudgetRange] = useState([0, 1000000]);
   const [selectedSeasons, setSelectedSeasons] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
+  const [showLocalOnly, setShowLocalOnly] = useState(false);
   const [flags, setFlags] = useState({
     with_kids: false,
     with_pets: false,
@@ -78,9 +82,12 @@ function ReviewsList() {
       if (flags.limited_mobility && !r.limited_mobility) return false;
       if (flags.eldery_people && !r.eldery_people) return false;
       if (selectedRating !== null && r.city_rating < selectedRating) return false;
+      if (showLocalOnly && !r.local_resident) return false;
+      if (selectedRegion && r.region !== selectedRegion) return false;
+
       return true;
     });
-  }, [cityReviews, budgetRange, selectedSeasons, selectedTags, selectedTypes, flags, selectedRating]);
+  }, [cityReviews, budgetRange, selectedSeasons, selectedTags, selectedTypes, flags, selectedRating, showLocalOnly, selectedRegion]);
 
 
   return (
@@ -167,6 +174,21 @@ function ReviewsList() {
               })}
             </div>
           </div>
+          <button
+            onClick={() => setShowLocalOnly(prev => !prev)}
+            style={{
+              backgroundColor: showLocalOnly ? '#a7bd70' :  '#999',
+              color: 'white',
+              padding: '0.5rem 1rem',
+ border: '1px solid',
+                      borderRadius: '20px',
+              cursor: 'pointer',
+              marginBottom: '1rem',
+              fontSize: '1.1rem'
+            }}
+          >
+          Отзывы от местных
+          </button>
           <div style={{ marginBottom: '1rem', marginTop: '1.7rem' }}>
             <label><b style={{ fontSize: '1.4rem' }}>Рейтинг города:</b></label>
             <div style={{ display: 'flex', gap: '10px', marginTop: '1rem', fontSize: '1.3rem' }}>

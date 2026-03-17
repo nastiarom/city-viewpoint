@@ -2,7 +2,7 @@ import pic_1 from '/src/assets/profile_pics/duck.jpg'
 import pic_2 from '/src/assets/profile_pics/hedgehog.jpg'
 import pic_3 from '/src/assets/profile_pics/kapybara.jpg'
 import pic_4 from '/src/assets/profile_pics/rabbit.jpg'
-
+import pic_5 from '/src/assets/profile_pics/penguin.jpg'
 const users = [
 {
     id: 10,
@@ -45,6 +45,17 @@ const users = [
     photo: pic_4,
     city: "Санкт-Петербург",
     status: "Легенда дорог",
+    agreement_pd: true,
+    agreement_ea: true
+},
+{
+    id: 100,
+    email: "luminastik@yandex.ru",
+    nickname: "Анастасия",
+    password: "12345",
+    photo: pic_5,
+    city: "Москва",
+    status: "Исследователь",
     agreement_pd: true,
     agreement_ea: true
 },

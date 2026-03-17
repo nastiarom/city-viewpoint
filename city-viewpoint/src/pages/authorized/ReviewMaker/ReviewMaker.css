@@ -1,0 +1,504 @@
+/* Общий контейнер */
+.review-form-container {
+  max-width: 1000px;
+  margin: 20px auto 40px;
+  padding: 20px 30px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  color: #2f4f1f; /* тёплый тёмно-зелёный */
+}
+.city-select-wrapper select {
+  width: 400px;           /* фиксированная ширина */
+  padding: 8px 36px 8px 12px; /* справа больше места для стрелочки */
+  font-size: 1.2rem;
+  border-radius: 8px;
+  border: 2px solid #a3c644;
+  color: #2f4f1f;
+  background-color: #f7fbe9;
+  appearance: none;       /* убирает стандартный стиль стрелочки */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3csvg%20width%3d%2210%22%20height%3d%227%22%20viewBox%3d%220%200%2010%207%22%20fill%3d%22none%22%20xmlns%3d%22http%3a//www.w3.org/2000/svg%22%3e%3cpath%20d%3d%22M1%201L5%206L9%201%22%20stroke%3d%22%233a6b00%22%20stroke-width%3d%222%22/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 10px 7px;
+}
+
+/* Заголовки */
+.review-form-container h1 {
+  text-align: center;
+  font-size: 2.8rem;
+  margin-bottom: 10px;
+  color: #3a6b00; /* насыщенный тёплый зелёный */
+  letter-spacing: 1.5px;
+}
+
+.review-form-container h2 {
+  margin-top: 30px;
+  margin-bottom: 15px;
+  font-size: 1.8rem;
+  border-bottom: 3px solid #7ec850; /* светло-зелёный */
+  padding-bottom: 6px;
+  color: #5a8a1f;
+}
+
+.review-form-container h3 {
+  margin-top: 25px;
+  margin-bottom: 12px;
+  font-size: 1.8rem; /* чуть крупнее */
+  color: #3a6b00;
+  font-weight: 700;
+}
+
+/* Вежливое сообщение */
+.polite-message {
+  font-size: 1.1rem;
+  color: #4a6b1f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 25px;
+}
+
+/* Рейтинги */
+.rating-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.rating-label {
+  flex: 0 0 290px;
+  font-weight: 700;
+  font-size: 1.6rem;
+  color: #4a5a1f;
+}
+
+/* Звёзды рейтинга */
+.star-rating {
+  display: flex;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.star {
+  color: #ccc;
+  font-size: 3rem;
+  transition: color 0.3s ease;
+}
+
+.star.filled {
+  color: #a3c644; /* мягкий зелёный */
+}
+
+.star:hover,
+.star:focus {
+  color: #7aa32a;
+  outline: none;
+}
+
+/* Группы кнопок (теги, особенности, сезоны, типы поездок) */
+.buttons-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+/* Общие стили для кнопок выбора */
+.tag-button,
+.feature-button,
+.season-button,
+.trip-type-button {
+  padding: 10px 18px;
+  border: 2px solid transparent;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Теги — пастельный зелёный */
+.tag-button {
+  background-color: #d9f0b8;
+  color: #3a6b00;
+  border-color: #a3c644;
+}
+
+.tag-button.selected {
+  background-color: #7ec850;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(126, 200, 80, 0.5);
+  border-color: #4a7a0f;
+}
+
+.tag-button:hover:not(.selected) {
+  background-color: #c4e49a;
+}
+
+/* Особенности — пастельный персиковый */
+.feature-button {
+  background-color: #ffe5d4;
+  color: #b35a00;
+  border-color: #ffb07a;
+}
+
+.feature-button.selected {
+  background-color: #ff8c42;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(255, 140, 66, 0.5);
+  border-color: #b35a00;
+}
+
+.feature-button:hover:not(.selected) {
+  background-color: #ffcba3;
+}
+
+/* Сезоны — пастельный голубой */
+.season-button {
+  background-color: #d4eaff;
+  color: #1a4d8f;
+  border-color: #7ab8ff;
+}
+
+.season-button.selected {
+  background-color: #4a90e2;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(74, 144, 226, 0.5);
+  border-color: #1a4d8f;
+}
+
+.season-button:hover:not(.selected) {
+  background-color: #a9d0ff;
+}
+
+/* Типы поездок — пастельный фиолетовый */
+.trip-type-button {
+  background-color: #e6e0f8;
+  color: #5a4b9c;
+  border: 2px solid #a79de4;
+  box-shadow: 0 2px 6px rgba(90, 75, 156, 0.15);
+}
+
+.trip-type-button.selected {
+  background-color: #7d6ee0;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(125, 110, 224, 0.6);
+  border-color: #4b3fae;
+}
+
+.trip-type-button:hover:not(.selected) {
+  background-color: #cfc9f6;
+}
+.btn-back {
+  background-color: transparent;
+  border: none;
+  color: #4a7a0f;
+  font-size: 1.3rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 20px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-back:hover,
+.btn-back:focus {
+  background-color: rgba(74, 122, 15, 0.15);
+  outline: none;
+}
+
+
+/* Текстовые разделы */
+.text-section {
+  margin-bottom: 30px;
+  border-top: 1px solid #cde0b3;
+  padding-top: 20px;
+}
+
+/* Текстовые поля */
+.text-area {
+  width: 100%;
+  resize: vertical;
+  min-height: 120px;
+  padding: 14px 16px;
+  font-size: 1.3rem; /* увеличенный шрифт */
+  border: 2px solid #a3c644;
+  border-radius: 20px;
+  transition: border-color 0.3s ease;
+  font-family: inherit;
+  color: #2f4f1f;
+  background-color: #f7fbe9;
+}
+
+.text-area:focus {
+  border-color: #4a7a0f;
+  outline: none;
+  box-shadow: 0 0 8px rgba(74, 122, 15, 0.5);
+}
+
+/* Загрузка фото */
+/* Скрываем стандартный input */
+.photo-input {
+  display: none;
+}
+
+/* Обертка для кнопки и текста */
+.photo-uploader-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+  color: #3a6b00;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+/* Кастомная кнопка выбора файла */
+.photo-upload-button {
+  background-color: #7ec850;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(126, 200, 80, 0.5);
+  transition: background-color 0.3s ease;
+  user-select: none;
+}
+
+.photo-upload-button:hover:not(:disabled) {
+  background-color: #5ea32a;
+}
+
+.photo-upload-button:disabled {
+  background-color: #a0b38a;
+  cursor: not-allowed;
+}
+
+/* Текст рядом с кнопкой */
+.photo-upload-text {
+  font-style: italic;
+  color: #4a6b1f;
+  user-select: none;
+  min-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Превью фотографий */
+.photos-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.photo-wrapper {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(58, 107, 0, 0.15);
+  background: #f7fbe9;
+}
+
+.photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Кнопка удаления фото */
+.photo-remove-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(255, 255, 255, 0.85);
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 18px;
+  line-height: 18px;
+  color: #e74c3c;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.photo-remove-button:hover {
+  background: #e74c3c;
+  color: #fff;
+}
+
+/* Кастомные разделы */
+.custom-section {
+  margin-bottom: 25px;
+  padding: 15px 20px;
+  border: 1px solid #cde0b3;
+  border-radius: 10px;
+  background: #f7fbe9;
+}
+
+.custom-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  border: 2px solid #a3c644;
+  border-radius: 15px;
+  font-family: inherit;
+  transition: border-color 0.3s ease;
+  color: #2f4f1f;
+  background-color: #f7fbe9;
+}
+
+.custom-input:focus {
+  border-color: #4a7a0f;
+  outline: none;
+  box-shadow: 0 0 8px rgba(74, 122, 15, 0.5);
+}
+
+/* Кнопка удаления кастомного раздела */
+.delete-custom {
+  background-color: #a32f2f;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: background-color 0.3s ease;
+}
+
+.delete-custom:hover {
+  background-color: #7a2323;
+}
+
+/* Кнопка добавления кастомного раздела */
+.add-custom {
+  background-color: #4a7a0f;
+  color: white;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  transition: background-color 0.3s ease;
+}
+
+.add-custom:hover {
+  background-color: #3a5a0a;
+}
+
+/* Кнопки публикации и сохранения */
+.buttons-submit {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 40px;
+  margin-bottom: 20px;
+}
+
+.btn-publish,
+.btn-draft {
+  padding: 14px 32px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  border-radius: 30px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  min-width: 180px;
+}
+
+.btn-publish {
+  background-color: #4a7a0f;
+  color: white;
+}
+
+.btn-publish:hover {
+  background-color: #3a5a0a;
+}
+
+.btn-draft {
+  background-color: #8aa07a;
+  color: white;
+}
+
+.btn-draft:hover {
+  background-color: #6f7a5f;
+}
+.notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #4a7a0f;
+  color: white;
+  padding: 14px 28px;
+  border-radius: 30px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(74, 122, 15, 0.7);
+  z-index: 1000;
+  animation: slideDownFade 0.5s ease forwards;
+}
+
+@keyframes slideDownFade {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Адаптивность */
+@media (max-width: 600px) {
+  .rating-label {
+    flex: 0 0 140px;
+    font-size: 1.1rem;
+  }
+
+  .buttons-group {
+    gap: 8px;
+  }
+
+  .tag-button,
+  .feature-button,
+  .season-button,
+  .trip-type-button {
+    font-size: 1.1rem;
+    padding: 8px 14px;
+  }
+
+  .btn-publish,
+  .btn-draft {
+    font-size: 1.1rem;
+    padding: 12px 24px;
+    min-width: 140px;
+  }
+
+  .text-area {
+    font-size: 1.1rem;
+    min-height: 110px;
+  }
+}

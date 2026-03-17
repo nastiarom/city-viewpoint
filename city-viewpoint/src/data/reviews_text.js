@@ -228,6 +228,156 @@ const reviewsTexts = [
       }
     ],
   },
+  {
+  review_id: 7,
+  general: "Нижний Новгород осенью — отличное место для семейного отдыха. Прекрасные парки и живописные набережные создают атмосферу уюта, а разнообразие кафе с домашней кухней радует всех членов семьи.",
+  general_photos: [nizhniy_1],
+  general_places: [
+    { name: "Парк Швейцария", longitude: 44.012, latitude: 56.328 },
+    { name: "Набережная Федоровского", longitude: 44.015, latitude: 56.330 }
+  ],
+  food: "Местные кафе предлагают много блюд для детей и взрослых, с акцентом на свежие и натуральные продукты.",
+  food_photos: [],
+  food_places: [
+    { name: "Кафе 'Домашняя кухня'", longitude: 44.010, latitude: 56.327 }
+  ],
+  accommodation: "Отели с комфортными номерами и дружелюбным персоналом, идеально для семей.",
+  accommodation_photos: [],
+  accommodation_places: [
+    { name: "Отель 'Комфорт'", longitude: 44.008, latitude: 56.325 }
+  ],
+  lions: "Стоит посетить парк Швейцария и набережную — места для прогулок и отдыха всей семьёй.",
+  lions_photos: [],
+  lions_places: [
+    { name: "Парк Швейцария", longitude: 44.012, latitude: 56.328 }
+  ],
+  peculiarities: "Город отлично подходит для семейного отдыха с детьми, есть много зелёных зон и детских площадок.",
+  peculiarities_photos: [nizhniy_1],
+  peculiarities_places: [
+    { name: "Детская площадка в Парке Швейцария", longitude: 44.013, latitude: 56.329 }
+  ],
+  custom: null,
+},
+{
+  review_id: 8,
+  general: "Летний Нижний Новгород прекрасен для активного отдыха с питомцами. В городе много зелёных парков и специальных зон для выгула собак. Атмосфера дружелюбная и располагает к прогулкам на свежем воздухе.",
+  general_photos: [nizhniy_2],
+  general_places: [
+    { name: "Парк Кулибина", longitude: 44.009, latitude: 56.326 },
+    { name: "Парк Швейцария", longitude: 44.012, latitude: 56.328 }
+  ],
+  food: "Множество кафе с летними верандами, где рады гостям с питомцами и предлагают лёгкие блюда.",
+  food_photos: [],
+  food_places: [
+    { name: "Кафе 'Летний сад'", longitude: 44.011, latitude: 56.329 }
+  ],
+  accommodation: "Уютные апартаменты и гостевые дома с возможностью размещения с животными.",
+  accommodation_photos: [],
+  accommodation_places: [
+    { name: "Гостевой дом 'Лесной'", longitude: 44.010, latitude: 56.327 }
+  ],
+  lions: "Парк Кулибина — отличное место для активного отдыха и прогулок с питомцами.",
+  lions_photos: [],
+  lions_places: [
+    { name: "Парк Кулибина", longitude: 44.009, latitude: 56.326 }
+  ],
+  peculiarities: "Город приветствует гостей с животными, здесь много удобных зон для отдыха всей семьёй.",
+  peculiarities_photos: [nizhniy_2],
+  peculiarities_places: [
+    { name: "Набережная Волги", longitude: 44.013, latitude: 56.330 }
+  ],
+  custom: null,
+},
+{
+  review_id: 9,
+  general: "Зимой Зарайск — отличное место для активных видов спорта и паломничества. Свежий воздух и красивые пейзажи создают атмосферу уединения и силы. Особенно понравилось катание на лыжах и посещение храмов.",
+  general_photos: [zaraysk_1],
+  general_places: [
+    { name: "Парк культуры и отдыха", longitude: 38.884, latitude: 54.784 },
+    { name: "Храм Рождества Христова", longitude: 38.882, latitude: 54.783 }
+  ],
+  food: "В кафе есть блюда традиционной кухни, которые восстанавливают силы после активного дня.",
+  food_photos: [],
+  food_places: [
+    { name: "Кафе 'Спорт'", longitude: 38.883, latitude: 54.785 }
+  ],
+  accommodation: "Уютные гостиницы с хорошим сервисом и домашней атмосферой.",
+  accommodation_photos: [],
+  accommodation_places: [
+    { name: "Гостиница 'Зарайск'", longitude: 38.880, latitude: 54.780 }
+  ],
+  lions: "Парки и храмы создают уникальную атмосферу и впечатляют своей красотой.",
+  lions_photos: [],
+  lions_places: [
+    { name: "Парк культуры и отдыха", longitude: 38.884, latitude: 54.784 }
+  ],
+  peculiarities: "Город идеально подходит для семей с детьми и любителей активного отдыха зимой.",
+  peculiarities_photos: [zaraysk_2],
+  peculiarities_places: [
+    { name: "Центральная площадь", longitude: 38.882, latitude: 54.782 }
+  ],
+  custom: null,
+},
+{
+  review_id: 10,
+  general: "Весной Зарайск радует зелёными парками и тишиной. Отличное место для прогулок с детьми и отдыха на природе. Вкусная еда и уютные кафе делают пребывание особенно приятным.",
+  general_photos: [zaraysk_5],
+  general_places: [
+    { name: "Парк Победы", longitude: 38.880, latitude: 54.780 },
+    { name: "Центральная площадь", longitude: 38.882, latitude: 54.782 }
+  ],
+  food: "Кафе предлагают домашнюю кухню с акцентом на свежие продукты, есть блюда для детей.",
+  food_photos: [],
+  food_places: [
+    { name: "Кафе 'Весна'", longitude: 38.881, latitude: 54.781 }
+  ],
+  accommodation: "Гостиницы комфортные с хорошим сервисом и домашней атмосферой.",
+  accommodation_photos: [],
+  accommodation_places: [
+    { name: "Гостиница 'Весна'", longitude: 38.879, latitude: 54.779 }
+  ],
+  lions: "Прогулки по паркам и историческим местам дарят вдохновение и силы.",
+  lions_photos: [],
+  lions_places: [
+    { name: "Парк Победы", longitude: 38.880, latitude: 54.780 }
+  ],
+  peculiarities: "Город подходит для спокойного семейного отдыха и приятных прогулок.",
+  peculiarities_photos: [zaraysk_5],
+  peculiarities_places: [
+    { name: "Парк культуры и отдыха", longitude: 38.884, latitude: 54.784 }
+  ],
+  custom: null,
+},
+{
+  review_id: 11,
+  general: "Летом Зарайск предлагает интересные культурные маршруты и возможность посетить старинные храмы. Город подходит для путешествий с питомцами, здесь много зелёных зон и комфортных кафе.",
+  general_photos: [zaraysk_1],
+  general_places: [
+    { name: "Зарайский Кремль", longitude: 38.883, latitude: 54.783 },
+    { name: "Храм Рождества Христова", longitude: 38.882, latitude: 54.783 }
+  ],
+  food: "В кафе можно попробовать традиционные блюда и домашнюю выпечку.",
+  food_photos: [],
+  food_places: [
+    { name: "Кафе 'Истоки'", longitude: 38.881, latitude: 54.781 }
+  ],
+  accommodation: "Гостиницы чистые и уютные, с внимательным персоналом.",
+  accommodation_photos: [],
+  accommodation_places: [
+    { name: "Гостиница 'История'", longitude: 38.880, latitude: 54.780 }
+  ],
+  lions: "Основные достопримечательности легко доступны и интересны для посетителей.",
+  lions_photos: [],
+  lions_places: [
+    { name: "Зарайский Кремль", longitude: 38.883, latitude: 54.783 }
+  ],
+  peculiarities: "Город гостеприимен и удобен для отдыха с животными и без детей.",
+  peculiarities_photos: [zaraysk_2],
+  peculiarities_places: [
+    { name: "Парк культуры и отдыха", longitude: 38.884, latitude: 54.784 }
+  ],
+  custom: null,
+},
 ];
 
 export default reviewsTexts;

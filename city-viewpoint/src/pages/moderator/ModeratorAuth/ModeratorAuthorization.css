@@ -1,0 +1,63 @@
+.moderator-auth-container {
+    max-width: 400px;
+    margin: 80px auto;
+    padding: 2rem;
+    background-color: #f0f4f8;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+.moderator-auth-container h2 {
+    margin-bottom: 1.5rem;
+    color: #2f4f1f;
+}
+
+.moderator-auth-form input {
+    width: 100%;
+    padding: 12px 16px;
+    margin-bottom: 1rem;
+    border: 2px solid #a3c644;
+    border-radius: 30px;
+    font-size: 1.1rem;
+    box-sizing: border-box;
+}
+
+.moderator-submit-button {
+    width: 100%;
+    padding: 12px 0;
+    background-color: #7d6ee0;
+    border: none;
+    border-radius: 30px;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-weight: 600;
+}
+
+.moderator-submit-button:hover {
+    background-color: #5a4b9c;
+}
+
+.back-button {
+    background: transparent;
+    border: none;
+    color: #4a7a0f;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 20px;
+    margin-top: 3rem;
+    margin-left: 4rem;
+    padding: 6px 12px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.back-button:hover,
+.back-button:focus {
+    background-color: rgba(74, 122, 15, 0.15);
+    outline: none;
+}

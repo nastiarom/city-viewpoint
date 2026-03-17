@@ -1,0 +1,188 @@
+.profile-page {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+  margin-top: 2rem;
+  padding: 20px;
+  color: #333;
+  font-family: Arial, sans-serif;
+}
+
+.logout-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: #dc3545;
+  border: none;
+  color: white;
+  padding: 15px 15px;
+  border-radius: 40px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1.5rem;
+  transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+  background-color: #a71d2a;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.profile-photo-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.profile-photo {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ccc;
+  margin-bottom: 10px;
+}
+
+.upload-photo-button {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  font-weight: lighter;
+  transition: background-color 0.3s ease;
+  font-size: 1.3rem;
+}
+
+.upload-photo-button:hover {
+  background-color: #0056b3;
+}
+
+.input-group {
+  margin-bottom: 20px;
+  text-align: center; /* Центрируем содержимое */
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  text-align: center; /* Центрируем текст метки */
+}
+
+.input-group input {
+  width: 60%; /* Можно подстроить ширину */
+  padding: 8px 0;
+  font-size: 18px;
+  border: none;
+  border-bottom: 2px solid #007bff; /* Нижняя граница (подчёркивание) */
+  outline: none;
+  text-align: center; /* Текст внутри input по центру */
+  background-color: transparent;
+  transition: border-color 0.3s ease;
+  margin: 0 auto; /* Центрируем input блок */
+}
+
+.input-group input:focus {
+  border-bottom-color: #0056b3;
+  background-color: transparent;
+}
+
+.readonly-input {
+  cursor: default;
+  color: #555;
+}
+
+.status-points-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 30px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.status {
+  padding: 8px 20px;
+  border: 2px solid;
+  border-radius: 30px;
+  min-width: 140px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  user-select: none;
+}
+
+.points {
+  background-color: #f0f0f0;
+  padding: 8px 20px;
+  border-radius: 30px;
+  color: #333;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  user-select: none;
+}
+
+.points span {
+  font-weight: 700;
+  color: #007bff;
+}
+
+
+.buttons-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.buttons-row button {
+  flex: 1;
+  margin-right: 10px;
+  margin-top: 2rem;
+  padding: 10px 0;
+  font-size: 2rem;
+  cursor: pointer;
+  border-radius: 100px;
+  border: 1px solid transparent;
+  color: white;
+  transition: background-color 0.3s ease;
+  min-height: 8rem;
+}
+
+.buttons-row button:last-child {
+  margin-right: 0;
+}
+
+.btn-favorites {
+  background-color: #ff004049;
+  border-color: #ff0000;
+}
+
+.btn-favorites:hover {
+  background-color: #b30000;
+  border-color: #b30000;
+}
+
+.btn-add-review {
+  background-color: #2863a7ae;
+  border-color: #284aa7;
+}
+
+.btn-add-review:hover {
+  background-color: #261e7e;
+  border-color: #1d07eb;
+}
+
+.btn-drafts {
+  background-color: #6c757da9;
+  border-color: #6c757d;
+}
+
+.btn-drafts:hover {
+  background-color: #565e64;
+  border-color: #565e64;
+}
