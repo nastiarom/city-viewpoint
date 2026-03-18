@@ -91,7 +91,7 @@ function ReviewsList() {
 
 
   return (
-    <div>
+    <div style={{backgroundColor:'white', backgroundImage:'none'}}>
       <ReviewsListHeader />
       <div style={{ display: 'flex', gap: '20px', marginTop: '1.5%', minHeight: '70vh', marginLeft: '5%', marginRight: '5%' }}>
         <aside style={{ flexBasis: '350px', border: '1px solid #ccc', borderRadius: '8px', padding: '1rem', height: 'fit-content', position: 'sticky', top: '1rem' }}>

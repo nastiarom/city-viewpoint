@@ -16,8 +16,6 @@ function ModeratorAuthorization() {
 
   const handleSubmit = e => {
     e.preventDefault();
-
-    alert(`Добро пожаловать, модератор ${form.email}!`);
     navigate("/modProfile");
   };
 

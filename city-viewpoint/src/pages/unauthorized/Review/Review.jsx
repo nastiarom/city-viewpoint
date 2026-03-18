@@ -168,9 +168,9 @@ function Review() {
     });
   }
   return (
-    <>
+    <div  style={{backgroundColor:'white', backgroundImage:'none'}} >
       <ReviewHeader />
-      <main style={{ maxWidth: '1000px', margin: '2rem auto', padding: '0 1rem' }}>
+      <main style={{ maxWidth: '1000px', margin: '2rem auto', padding: '0 1rem'}}>
         <div className="review-top-row">
           <div style={{ display: 'flex', alignItems: 'center', fontSize: '18px', fontWeight: 'lighter' }}>
             <span className="user-photo-circle">
@@ -545,7 +545,7 @@ function Review() {
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-
+import { useNavigate } from "react-router-dom";
 const MOCK_REVIEWS = {
   new: [
     {
@@ -46,26 +46,71 @@ const MOCK_REVIEWS = {
     },
   ],
 };
-
+function Modal({ message, onClose }) {
+  return (
+    <div style={{
+      position: "fixed",
+      top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 1000,
+    }}>
+      <div style={{
+        backgroundColor: "white",
+        padding: 30,
+        borderRadius: 12,
+        maxWidth: 400,
+        textAlign: "center",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+      }}>
+        <p style={{ fontSize: "1.3rem", marginBottom: 20 }}>{message}</p>
+        <button
+          onClick={onClose}
+          style={{
+            padding: "10px 20px",
+            backgroundColor: "#4b91d6",
+            color: "white",
+            border: "none",
+            borderRadius: 30,
+            fontSize: "1.2rem",
+            cursor: "pointer",
+          }}
+        >
+          Закрыть
+        </button>
+      </div>
+    </div>
+  )
+};
 export default function ModerationProfile() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("new");
   const [reviews, setReviews] = useState([]);
   const [expandedIds, setExpandedIds] = useState({});
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
 
+  const [notification, setNotification] = useState(null);
+
   useEffect(() => {
     setReviews(MOCK_REVIEWS[activeTab]);
     setExpandedIds({});
   }, [activeTab]);
 
+  const showNotification = (message, type = "success") => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
   const handleApprove = (id) => {
-    alert(`Отзыв ${id} одобрен`);
+    showNotification(`Отзыв опубликован`, "success");
     setReviews((prev) => prev.filter((r) => r.id !== id));
   };
 
   const handleBlock = (id) => {
-    alert(`Отзыв ${id} заблокирован`);
+    showNotification(`Отзыв заблокирован`, "error");
     setReviews((prev) => prev.filter((r) => r.id !== id));
   };
 
@@ -82,16 +127,54 @@ export default function ModerationProfile() {
   const handleInviteSubmit = (e) => {
     e.preventDefault();
     if (!inviteEmail.trim()) {
-      alert("Пожалуйста, введите email.");
+      showNotification("Пожалуйста, введите email.", "error");
       return;
     }
-    alert(`Приглашение отправлено на ${inviteEmail}`);
+    showNotification(`Временный пароль отправлен на ${inviteEmail}`, "success");
     setInviteEmail("");
     setShowInviteForm(false);
   };
 
+  const handleLogout = () => {
+    navigate("/");
+  };
+
   return (
     <div style={{ padding: 20, fontFamily: "Raleway, sans-serif" }}>
+      {notification && (
+        <div
+          style={{
+            position: "fixed",
+            top: "20px",
+            right: "20px",
+            padding: "16px 24px",
+            borderRadius: "12px",
+            backgroundColor: notification.type === "success" ? "#73ce49" : "#ff6334",
+            color: "white",
+            fontSize: "1.1rem",
+            fontWeight: "600",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+            zIndex: 1000,
+            animation: "slideIn 0.3s ease-out",
+          }}
+        >
+          {notification.message}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(400px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
+
       <header
         style={{
           display: "flex",
@@ -101,7 +184,7 @@ export default function ModerationProfile() {
         }}
       >
         <button
-          onClick={() => alert("Выход из системы")}
+          onClick={handleLogout}
           style={{
             padding: "8px 16px",
             backgroundColor: "#f44336",
@@ -110,7 +193,10 @@ export default function ModerationProfile() {
             borderRadius: 40,
             cursor: "pointer",
             fontSize: "1.4rem",
+            transition: "background-color 0.3s ease",
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#d32f2f")}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#f44336")}
         >
           Выйти
         </button>
@@ -126,7 +212,10 @@ export default function ModerationProfile() {
             cursor: "pointer",
             fontSize: "1.4rem",
             marginLeft: 20,
+            transition: "background-color 0.3s ease",
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2e5c8a")}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#4b91d6")}
         >
           Пригласить модератора
         </button>
@@ -173,7 +262,10 @@ export default function ModerationProfile() {
                 fontSize: "1.2rem",
                 cursor: "pointer",
                 flex: "1 1 auto",
+                transition: "background-color 0.3s ease",
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2e5c8a")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#4b91d6")}
             >
               Выслать пароль
             </button>
@@ -189,7 +281,10 @@ export default function ModerationProfile() {
                 fontSize: "1.2rem",
                 cursor: "pointer",
                 flex: "1 1 auto",
+                transition: "background-color 0.3s ease",
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#aaa")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ccc")}
             >
               Отмена
             </button>
@@ -332,7 +427,10 @@ export default function ModerationProfile() {
                         cursor: "pointer",
                         fontSize: "1.4rem",
                         minWidth: 100,
+                        transition: "background-color 0.3s ease",
                       }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#5aa835")}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#73ce49")}
                     >
                       Опубликовать
                     </button>
@@ -347,7 +445,10 @@ export default function ModerationProfile() {
                         cursor: "pointer",
                         fontSize: "1.4rem",
                         minWidth: 100,
+                        transition: "background-color 0.3s ease",
                       }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#e64520")}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ff6334")}
                     >
                       Заблокировать
                     </button>

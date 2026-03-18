@@ -37,8 +37,6 @@ function Authorization() {
   const handleSubmit = e => {
     e.preventDefault();
 
-    alert(`Добро пожаловать, ${form.email}!`);
-
     navigate(`/userProfile/${encodeURIComponent(form.email)}`);
   };
 

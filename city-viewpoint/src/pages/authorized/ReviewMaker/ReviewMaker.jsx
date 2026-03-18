@@ -169,7 +169,7 @@ function SingleSelectButton({ selected, onClick, children, className }) {
     );
 }
 
-function PhotoUploader({ photos, setPhotos }) {
+function PhotoUploader({ photos = [], setPhotos }) {
     const MAX = MAX_PHOTOS_PER_SECTION;
 
     const handleFiles = e => {
@@ -190,7 +190,7 @@ function PhotoUploader({ photos, setPhotos }) {
         setPhotos(prev => prev.filter((_, i) => i !== index));
     };
 
-    const fileNamesText = photos.length > 0 ? `${photos.length} файл${photos.length > 1 ? "ов" : ""} выбрано` : "Файл не выбран";
+    const fileNamesText = photos.length > 0 ? `${photos.length} файл${photos.length > 1 ? "ов" : ""} выбран` : "Файлов не выбрано";
 
     return (
         <div>
@@ -210,7 +210,11 @@ function PhotoUploader({ photos, setPhotos }) {
                 className="photo-input"
             />
             <div className="photos-preview">
-                {photos.map((src, i) => (
+                {console.log("photos:", photos)}
+                {console.log("typeof photos:", typeof photos)}
+                {console.log("setPhotos:", setPhotos)
+                }
+                {Array.isArray(photos) && photos.map((src, i) => (
                     <div key={i} className="photo-wrapper">
                         <img src={src} alt={`Фото ${i + 1}`} className="photo-img" />
                         <button
@@ -224,6 +228,7 @@ function PhotoUploader({ photos, setPhotos }) {
                     </div>
                 ))}
             </div>
+
         </div>
     );
 }
@@ -234,6 +239,7 @@ export default function ReviewFormAdvanced() {
     const [selectedCity, setSelectedCity] = useState(cities[0]);
     const [budget, setBudget] = useState("");
     const [isLocal, setIsLocal] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
     const [notification, setNotification] = useState(null);
 
     const [cityRating, setCityRating] = useState(0);
@@ -296,16 +302,37 @@ export default function ReviewFormAdvanced() {
         setCustomSections(prev => prev.filter((_, i) => i !== index));
     };
 
-    const publishReview = () => {
-        setNotification("Отзыв отправлен на модерацию!");
-        setTimeout(() => setNotification(null), 4000);
-    };
-
 
     const saveDraft = () => {
         alert("Черновик сохранён!");
     };
+    const publishReview = () => {
+        setIsSubmitted(true);
+    };
 
+    if (isSubmitted) {
+        return (
+            <div style={{ padding: 20, textAlign: "center" }}>
+                <h2 style={{ fontSize: '3rem', marginTop: '3rem' }}>Спасибо за ваш отзыв!</h2>
+                <p style={{ fontSize: '1.3rem', marginTop: '2rem' }}>Ваш отзыв отправлен на модерацию и скоро появится на сайте.</p>
+                <button
+                    onClick={() => navigate("/profile")}
+                    style={{
+                        marginTop: 20,
+                        padding: "12px 24px",
+                        fontSize: "1.2rem",
+                        borderRadius: 30,
+                        border: "none",
+                        backgroundColor: "#4b91d6",
+                        color: "white",
+                        cursor: "pointer",
+                    }}
+                >
+                    Вернуться в профиль
+                </button>
+            </div>
+        );
+    }
     return (
         <>
             <button
@@ -464,11 +491,12 @@ export default function ReviewFormAdvanced() {
                             className="text-area"
                         />
                         <PhotoUploader
-                            photos={photos[section]}
+                            photos={photos[section] || []}
                             setPhotos={newPhotos => handlePhotosChange(section, newPhotos)}
                         />
                     </div>
                 ))}
+
 
                 <h2>Кастомные разделы</h2>
                 {customSections.map((section, i) => (
