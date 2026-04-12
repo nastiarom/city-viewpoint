@@ -1,7 +1,15 @@
 const express = require("express");
+const cors = require("cors");
 const moderateContent = require("./moderator");
 
 const app = express();
+
+// Разрешаем CORS для всех источников (для разработки)
+app.use(cors());
+
+// Или более избирательно, например:
+// app.use(cors({ origin: "http://localhost:5173" }));
+
 app.use(express.json());
 
 app.post("/moderate", async (req, res) => {

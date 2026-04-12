@@ -306,9 +306,35 @@ export default function ReviewFormAdvanced() {
     const saveDraft = () => {
         alert("Черновик сохранён!");
     };
-    const publishReview = () => {
-        setIsSubmitted(true);
-    };
+const publishReview = async () => {
+  try {
+    const combinedText = Object.values(texts).join("\n\n");
+    const response = await fetch("http://localhost:3000/moderate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contentId: 1,
+        contentType: "review",
+        text: combinedText
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Ошибка сервера: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log("Результат модерации:", result);
+
+    setIsSubmitted(true);
+  } catch (error) {
+    console.error("Ошибка при отправке отзыва:", error);
+    alert("Ошибка при отправке отзыва. Попробуйте позже.");
+  }
+};
+
 
     if (isSubmitted) {
         return (

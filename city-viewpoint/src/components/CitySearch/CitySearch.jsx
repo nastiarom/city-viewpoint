@@ -1,65 +1,37 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CitySearch.css';
 
 function CitySearch({ onSelect, initialCities = [] }) {
   const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState(initialCities);
   const [selectedCity, setSelectedCity] = useState('');
-  const timeoutRef = useRef(null);
+  const [isFocused, setIsFocused] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (query.length < 2) {
-      setSuggestions(initialCities);
-      return;
-    }
-
-    clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(async () => {
-      try {
-        const API_KEY = '1a142693-528a-4b26-aac4-664d9554eb38';
-        const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${API_KEY}&format=json&geocode=${encodeURIComponent(query)}&kind=locality&results=5&lang=ru_RU`;
-        const response = await fetch(url);
-        const data = await response.json();
-        const cities = data.response.GeoObjectCollection.featureMember.map(item => item.GeoObject.name);
-        setSuggestions(cities);
-      } catch (e) {
-        setSuggestions([]);
-      }
-    }, 300);
-
-    return () => clearTimeout(timeoutRef.current);
-  }, [query]);
-
-  const handleSelect = (city) => {
-    setQuery(city);
-    setSuggestions([]);
-    setSelectedCity(city);
-    if (onSelect) onSelect(city);
-  };
+  const suggestions = query.trim() === '' 
+    ? initialCities 
+    : initialCities.filter(city => 
+        city.name.toLowerCase().includes(query.toLowerCase())
+      );
 
   const handleInputChange = (e) => {
     setQuery(e.target.value);
-    setSelectedCity('');
+    setSelectedCity(''); 
+  };
+
+  const handleSelect = (city) => {
+    setQuery(city.name);
+    setSelectedCity(city.name);
+    setIsFocused(false);
+    if (onSelect) onSelect(city.name);
   };
 
   const handleSearch = () => {
-    if (!selectedCity) return;
-    if (onSelect) onSelect(selectedCity);
-    navigate(`/reviewsList?city=${encodeURIComponent(selectedCity)}`);
+    const finalCity = selectedCity || query;
+    if (!finalCity.trim()) return;
+    setIsFocused(false);
+    navigate(`/reviewsList?city=${encodeURIComponent(finalCity)}`);
   };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (selectedCity) {
-        handleSearch();
-      }
-    }
-  };
-
-  const isSearchDisabled = !selectedCity;
 
   return (
     <div className="city-search-container">
@@ -67,29 +39,24 @@ function CitySearch({ onSelect, initialCities = [] }) {
         type="search"
         value={query}
         onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-        placeholder="Поиск"
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setTimeout(() => setIsFocused(false), 200)}
+        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+        placeholder="Поиск города..."
         className="city-search-input"
-        autoComplete="off"
       />
-      <button
-        onClick={handleSearch}
-        disabled={isSearchDisabled}
-        className="city-search-button"
-      >
+      <button onClick={handleSearch} disabled={!query.trim()} className="city-search-button">
         Найти
       </button>
-
-      {suggestions.length > 0 && (
+      {isFocused && query.trim().length > 0 && suggestions.length > 0 && (
         <ul className="city-search-suggestions">
-          {suggestions.map(city => (
-            <li
-              key={city}
-              onClick={() => handleSelect(city)}
+          {suggestions.map((city) => (
+            <li 
+              key={city.id || city.name} 
+              onClick={() => handleSelect(city)} 
               className="city-search-suggestion"
-              onMouseDown={e => e.preventDefault()}
             >
-              {city}
+              {city.name} <span className="region-hint">{city.region}</span>
             </li>
           ))}
         </ul>

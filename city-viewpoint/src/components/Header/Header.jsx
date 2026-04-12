@@ -1,22 +1,33 @@
 import './Header.css'
 import { Link } from 'react-router-dom'
 import logo from '/src/assets/logo.png'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import CitySearch from '../CitySearch/CitySearch'
-import popularCities from '/src/data/popularCities'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchCities } from '../../store/citySlice'
 
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const [selectedCity, setSelectedCity] = useState('');
+  const [selectedCity, setSelectedCity] = useState('')
+  
+  const dispatch = useDispatch()
+  const cities = useSelector((state) => state.cities.list)
+
+  useEffect(() => {
+    dispatch(fetchCities())
+  }, [dispatch])
 
   return (
     <nav>
       <div className="nav-left">
         <Link to="/"><img src={logo} alt="CityViewpoint" className='logo' /></Link>
-        <CitySearch onSelect={setSelectedCity} />
+        <CitySearch 
+          onSelect={setSelectedCity} 
+          initialCities={cities} 
+        />
       </div>
       <div className="nav-center">
-        <p className='yourCity'>Ваш город: Москва</p>
+        <p className='yourCity'>Ваш город: {selectedCity || 'Москва'}</p>
       </div>
 
       <div className="nav-right">
@@ -26,8 +37,8 @@ function Header() {
           <span></span>
         </div>
         <ul className={menuOpen ? "open" : ""}>
-          <li><Link to="authorization">Вход</Link></li>
-          <li><Link to="registration" className='reg'>Регистрация</Link></li>
+          <li><Link to="/authorization">Вход</Link></li>
+          <li><Link to="/registration" className='reg'>Регистрация</Link></li>
         </ul>
       </div>
     </nav>

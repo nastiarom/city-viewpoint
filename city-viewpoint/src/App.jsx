@@ -9,7 +9,8 @@ import CityModal from './components/CityModal/CityModal';
 import CitySearch from './components/CitySearch/CitySearch';
 import { useNavigate } from 'react-router-dom';
 import popularCities from './data/popularCities'
-
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchCities } from './store/citySlice';
 const items = [
   { text: 'Города', color: '#44a7e9ff' },
   { text: 'Регионы', color: '#90e978ff' },
@@ -19,6 +20,8 @@ const items = [
 ];
 
 function App() {
+  const dispatch = useDispatch();
+  const cities = useSelector((state) => state.cities.list);
   const [isCityModalOpen, setCityModalOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState('');
   const navigate = useNavigate();
@@ -26,6 +29,7 @@ function App() {
 
   const handleItemClick = (text) => {
     if (text === 'Города') {
+      dispatch(fetchCities());
       setCityModalOpen(true);
     }
   };
@@ -64,7 +68,7 @@ function App() {
 
       {isCityModalOpen && (
         <CityModal onClose={() => setCityModalOpen(false)}>
-          <CitySearch onSelect={setSelectedCity} initialCities={popularCities}/>
+          <CitySearch initialCities={cities} />
         </CityModal>
       )}
     </div>

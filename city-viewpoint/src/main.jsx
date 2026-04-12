@@ -1,6 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Route, Routes} from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { Provider } from 'react-redux';
+import { store } from './store';
 import './index.css'
 import App from './App.jsx'
 import Authorization from './pages/unauthorized/Authorization.jsx'
@@ -13,21 +15,23 @@ import ModerationProfile from './pages/moderator/ModeratorProfile/ModerationProf
 import UserProfile from './pages/authorized/Profile/Profile.jsx'
 import ReviewForm from './pages/authorized/ReviewMaker/ReviewMaker.jsx'
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <BrowserRouter>
-  
-      <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="/authorization" element={<Authorization />} />
-        <Route path="/registration" element={<Registration />} />
-        <Route path="/review/:id" element={<Review />} />
-        <Route path="/reviewsList" element={<ReviewsList />} />
-        <Route path="/modAuth" element={<ModeratorAuthorization />} />
-        <Route path="/modProfile" element={<ModerationProfile />} />
-        <Route path="/userProfile/:email" element={<UserProfile />} />
-        <Route path="/reviewForm" element={<ReviewForm />} />
-      </Routes>
-   
-    </BrowserRouter>
-  </StrictMode>,
+  <Provider store={store}>
+    <StrictMode>
+      <BrowserRouter>
+
+        <Routes>
+          <Route path="/" element={<App />} />
+          <Route path="/authorization" element={<Authorization />} />
+          <Route path="/registration" element={<Registration />} />
+          <Route path="/review/:id" element={<Review />} />
+          <Route path="/reviewsList" element={<ReviewsList />} />
+          <Route path="/modAuth" element={<ModeratorAuthorization />} />
+          <Route path="/modProfile" element={<ModerationProfile />} />
+          <Route path="/userProfile/:email" element={<UserProfile />} />
+          <Route path="/reviewForm" element={<ReviewForm />} />
+        </Routes>
+
+      </BrowserRouter>
+    </StrictMode>
+  </Provider>
 )
