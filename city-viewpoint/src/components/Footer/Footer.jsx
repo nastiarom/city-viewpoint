@@ -21,9 +21,9 @@ function Footer() {
         </div>
         <div className="footer-section">
             <ul>
-            <li><Link to='https://docs.google.com/document/d/1yFj6g3eOr_fjyaIDogsULQ2OnQzulKn4zelvXn2pCo0/edit?tab=t.0'>Политика конфиденциальности</Link></li>
-            <li><Link to='https://docs.google.com/document/d/1yFj6g3eOr_fjyaIDogsULQ2OnQzulKn4zelvXn2pCo0/edit?tab=t.0'>Пользовательское соглашение</Link></li>
-            <li><Link to='https://docs.google.com/document/d/1yFj6g3eOr_fjyaIDogsULQ2OnQzulKn4zelvXn2pCo0/edit?tab=t.0'>Правила пользования платформой</Link></li>
+            <li><Link to='/privacy'>Политика конфиденциальности</Link></li>
+            <li><Link to='/terms'>Пользовательское соглашение</Link></li>
+            <li><Link to='/personal-data'>Согласие на обработку персональных данных</Link></li>
             </ul>
             <div className="footer-button">
               <button><Link to="/modAuth">Вход для модератора</Link></button>

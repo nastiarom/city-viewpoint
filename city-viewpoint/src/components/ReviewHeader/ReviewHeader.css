@@ -83,3 +83,37 @@
   border: 0.2rem solid #a7bd70;
   font-weight: 100;
 }
+
+@media (max-width: 800px) {
+  .review-header-nav {
+    padding: 0.5rem;
+    min-height: 50px;
+    gap: 5px;
+  }
+  .review-header-nav-center {
+    display: none; 
+  }
+
+  .review-header-back-button {
+    font-size: 1.2rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .review-header-auth-list {
+    gap: 0.5rem;
+  }
+
+  .review-header-auth-link {
+    font-size: 1.1rem;
+    padding: 0.3rem 0.7rem;
+  }
+
+  .review-header-reg {
+    border-width: 0.15rem;
+  }
+}
+@media (max-width: 480px) {
+    .review-header-back-button span {
+        display: none;
+    }
+}

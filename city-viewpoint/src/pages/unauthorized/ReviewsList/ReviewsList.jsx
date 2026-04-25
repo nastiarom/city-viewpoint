@@ -1,14 +1,15 @@
-import React, { useState, useMemo } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import ReviewsListHeader from './ReviewsListHeader';
 import Footer from '/src/components/Footer/Footer';
-import cities from '/src/data/cities';
-import reviews from '/src/data/reviews';
-import reviewsTexts from '/src/data/reviews_text';
 import { FaStar } from 'react-icons/fa';
 import { FcLike } from "react-icons/fc";
 import BudgetSlider from './BudgetSlider';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchReviewsByCity } from '/src/store/citySlice';
+import { fetchFilteredReviews } from '/src/store/citySlice';
 import './ReviewsList.css'
+
 function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
@@ -26,29 +27,52 @@ const ratingOptions = [
 
 function ReviewsList() {
   const query = useQuery();
-  const cityParam = query.get('city') || '';
-  const cityObj = cities.find(
-    c => c.city.toLowerCase() === cityParam.toLowerCase()
-  );
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const cityReviews = reviews.filter(
-    r => r.city.toLowerCase() === cityParam.toLowerCase()
-  );
-  const [selectedRegion, setSelectedRegion] = useState('');
-  const regions = Array.from(new Set(cityReviews.map(r => r.region))).filter(Boolean);
+  const cityId = query.get('id');
+  const SERVER_URL = "http://localhost:8081/static/";
 
-  const [selectedRating, setSelectedRating] = useState(null);
+  const allCities = useSelector((state) => state.cities.list);
+  const cityReviews = useSelector((state) => state.cities.reviews);
+  const isLoading = useSelector((state) => state.cities.reviewsLoading);
+
+  const cityObj = useMemo(() => {
+    return allCities.find(c => String(c.id) === String(cityId));
+  }, [allCities, cityId]);
+
+  useEffect(() => {
+    if (cityId) {
+      dispatch(fetchReviewsByCity(cityId));
+    }
+  }, [cityId, dispatch]);
+
   const [budgetRange, setBudgetRange] = useState([0, 1000000]);
   const [selectedSeasons, setSelectedSeasons] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
-  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [selectedRating, setSelectedRating] = useState(null);
   const [showLocalOnly, setShowLocalOnly] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState('');
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [keyWords, setKeyWords] = useState('');
+
   const [flags, setFlags] = useState({
-    with_kids: false,
+    with_little_kids: false,
     with_pets: false,
     physically_challenged: false,
-    buisness_trip: false,
+    limited_mobility: false,
+    eldery_people: false,
+    special_diet: false,
   });
+
+  const handleFlagChange = (e) => {
+    const { name, checked } = e.target;
+    setFlags((prev) => ({ ...prev, [name]: checked }));
+  };
+
+  const regions = useMemo(() => {
+    return Array.from(new Set((cityReviews || []).map(r => r.region))).filter(Boolean);
+  }, [cityReviews]);
 
   const toggleSelection = (value, array, setArray) => {
     if (array.includes(value)) {
@@ -58,44 +82,75 @@ function ReviewsList() {
     }
   };
 
-  const handleFlagChange = e => {
-    const { name, checked } = e.target;
-    setFlags(prev => ({ ...prev, [name]: checked }));
+  const handleSearch = (searchAll = false) => {
+    const isDefaultBudget = budgetRange[0] === 0 && budgetRange[1] === 1000000;
+    const budgetFilter = isDefaultBudget ? null : {
+      min: budgetRange[0],
+      max: budgetRange[1]
+    };
+
+    const isDefaultRating = !selectedRating || selectedRating <= 0;
+    const ratingFilter = isDefaultRating ? null : {
+      min: Number(selectedRating),
+      max: 5.0
+    };
+    const filterRequest = {
+      city_id: searchAll ? null : Number(cityId),
+      season: selectedSeasons.length > 0 ? selectedSeasons[0] : null,
+      trip_type: selectedTypes.length > 0 ? selectedTypes[0] : null,
+      tags: selectedTags.length > 0 ? selectedTags : null,
+      budget: budgetFilter,
+      rating: ratingFilter,
+      with_kids: flags.with_little_kids || null,
+      with_pets: flags.with_pets || null,
+      elderly_people: flags.eldery_people || null,
+      limited_mobility: flags.limited_mobility || null,
+      physically_challenged: flags.physically_challenged || null,
+
+      key_words: keyWords.trim() || null
+    };
+
+    console.log("Отправка фильтров:", filterRequest);
+    dispatch(fetchFilteredReviews(filterRequest));
   };
+
+
   const seasonColors = {
-    Зима: { background: ' #6ca0dc', color: 'white' },
+    Зима: { background: '#6ca0dc', color: 'white' },
     Весна: { background: '#7bc74d', color: 'white' },
-    Лето: { background: ' #ff5462', color: 'white' },
-    Осень: { background: ' #d9743f', color: 'white' },
+    Лето: { background: '#ff5462', color: 'white' },
+    Осень: { background: '#d9743f', color: 'white' },
   };
 
-  const filteredReviews = useMemo(() => {
-    return cityReviews.filter(r => {
-      if (r.budget < budgetRange[0] || r.budget > budgetRange[1]) return false;
-      if (selectedSeasons.length && !selectedSeasons.includes(r.season)) return false;
-      if (selectedTags.length && !selectedTags.some(tag => r.tags.includes(tag))) return false;
-      if (selectedTypes.length && !selectedTypes.includes(r.type)) return false;
-      if (flags.with_little_kids && !r.with_little_kids) return false;
-      if (flags.with_pets && !r.with_pets) return false;
-      if (flags.physically_challenged && !r.physically_challenged) return false;
-      if (flags.special_diet && !r.special_diet) return false;
-      if (flags.limited_mobility && !r.limited_mobility) return false;
-      if (flags.eldery_people && !r.eldery_people) return false;
-      if (selectedRating !== null && r.city_rating < selectedRating) return false;
-      if (showLocalOnly && !r.local_resident) return false;
-      if (selectedRegion && r.region !== selectedRegion) return false;
+  const reviewsToDisplay = cityReviews || [];
 
-      return true;
-    });
-  }, [cityReviews, budgetRange, selectedSeasons, selectedTags, selectedTypes, flags, selectedRating, showLocalOnly, selectedRegion]);
-
+  if (isLoading) return <div>Загрузка отзывов...</div>;
 
   return (
-    <div style={{backgroundColor:'white', backgroundImage:'none'}}>
+    <div style={{ backgroundColor: 'white', backgroundImage: 'none' }}>
       <ReviewsListHeader />
       <div style={{ display: 'flex', gap: '20px', marginTop: '1.5%', minHeight: '70vh', marginLeft: '5%', marginRight: '5%' }}>
         <aside style={{ flexBasis: '350px', border: '1px solid #ccc', borderRadius: '8px', padding: '1rem', height: 'fit-content', position: 'sticky', top: '1rem' }}>
           <h2 style={{ fontSize: '2rem', marginBottom: '1rem', fontWeight: 'lighter' }}>Фильтры</h2>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label><b style={{ fontSize: '1.4rem' }}>Поиск в тексте:</b></label>
+            <input
+              type="text"
+              placeholder="Например: вкусно уютно..."
+              value={keyWords}
+              onChange={(e) => setKeyWords(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 15px',
+                marginTop: '10px',
+                borderRadius: '20px',
+                border: '1px solid #ccc',
+                fontSize: '1.1rem',
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
           <div style={{}}>
             <BudgetSlider budgetRange={budgetRange} setBudgetRange={setBudgetRange} />
 
@@ -177,17 +232,17 @@ function ReviewsList() {
           <button
             onClick={() => setShowLocalOnly(prev => !prev)}
             style={{
-              backgroundColor: showLocalOnly ? '#a7bd70' :  '#999',
+              backgroundColor: showLocalOnly ? '#a7bd70' : '#999',
               color: 'white',
               padding: '0.5rem 1rem',
- border: '1px solid',
-                      borderRadius: '20px',
+              border: '1px solid',
+              borderRadius: '20px',
               cursor: 'pointer',
               marginBottom: '1rem',
               fontSize: '1.1rem'
             }}
           >
-          Отзывы от местных
+            Отзывы от местных
           </button>
           <div style={{ marginBottom: '1rem', marginTop: '1.7rem' }}>
             <label><b style={{ fontSize: '1.4rem' }}>Рейтинг города:</b></label>
@@ -325,23 +380,54 @@ function ReviewsList() {
             </div>
           </div>
 
+          <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <button
+              onClick={() => handleSearch(false)}
+              style={{
+                padding: '12px',
+                backgroundColor: '#a7bd70',
+                color: 'white',
+                border: 'none',
+                borderRadius: '25px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '1.1rem'
+              }}
+            >
+              Применить фильтры
+            </button>
+
+            <button
+              onClick={() => handleSearch(true)}
+              style={{
+                padding: '12px',
+                backgroundColor: 'transparent',
+                color: '#a7bd70',
+                border: '2px solid #a7bd70',
+                borderRadius: '25px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '1.1rem'
+              }}
+            >
+              Поиск по всем городам
+            </button>
+          </div>
+
         </aside>
         <main style={{ flex: 1 }}>
           {cityObj ? (
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <h1 style={{ fontSize: '4rem', fontWeight: 'lighter' }}>{cityObj.city.toUpperCase()}</h1>
+                <h1 style={{ fontSize: '4rem', fontWeight: 'lighter' }}>{cityObj.name.toUpperCase()}</h1>
                 <FaStar style={{ color: '#f5ce0bff', fontSize: '2.7rem', marginLeft: '1%' }} />
                 <p style={{ fontSize: '1.4rem' }}>Общий рейтинг: {cityObj.rating}</p>
               </div>
               <p style={{ fontSize: '1.5rem', color: '#555' }}>{cityObj.region}</p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '1rem' }}>
-                {filteredReviews.length ? filteredReviews.map(review => {
-                  const textObj = reviewsTexts.find(rt => rt.review_id === review.id);
-                  const snippet = textObj?.peculiarities
-                    ? textObj.peculiarities.slice(0, 200) + (textObj.peculiarities.length > 200 ? '...' : '')
-                    : '';
+                {reviewsToDisplay.length ? reviewsToDisplay.map(review => {
+                  const snippet = review.text_start || '';
 
                   return (
                     <Link
@@ -355,45 +441,38 @@ function ReviewsList() {
                         textDecoration: 'none',
                         color: 'inherit',
                         overflow: 'hidden',
+                        marginBottom: '15px'
                       }}
                     >
                       <img
-                        src={review.main_photo}
-                        alt={`Фото отзыва ${review.city}`}
-                        style={{ width: '180px', objectFit: 'cover' }}
+                        src={`${SERVER_URL}${review.main_photo}`}
+                        alt="Фото отзыва"
+                        style={{ width: '180px', height: '180px', objectFit: 'cover' }}
                       />
                       <div style={{ padding: '15px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                         <div>
-                          <div style={{ fontWeight: 'bold', fontSize: '2rem' }}>{review.city}</div>
-                          <div style={{ fontSize: '1.5rem', color: '#666', marginTop: '0.5%' }}>{new Date(review.date).toLocaleDateString()}</div>
-                          <div style={{ fontSize: '1.3rem', marginTop: '0.5rem', color: 'green' }}>{review.type}</div>
-                          <div style={{ marginTop: '1%', fontSize: '0.9rem' }}>
-                            {review.tags.map(tag => (
-                              <span
-                                key={tag}
-                                style={{
-                                  backgroundColor: '#eee',
-                                  borderRadius: '4px',
-                                  padding: '2px 6px',
-                                  marginRight: '5px',
-                                  fontSize: '1.2rem',
-                                }}
-                              >
-                                {tag}
-                              </span>
-                            ))}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ fontWeight: 'bold', fontSize: '2rem' }}>{review.city}</div>
+                            <div style={{ fontSize: '1.5rem', color: '#a7bd70', fontWeight: 'bolder' }}>  <FaStar style={{ color: '#f5ce0bff', fontSize: '2rem' }} /> {Number(review.review_mark).toFixed(2)}</div>
                           </div>
-                          <p style={{ marginTop: '10px', fontSize: '1.1rem', color: '#333' }}>{snippet}</p>
+
+                          <div style={{ fontSize: '1.5rem', color: '#666', marginTop: '0.5%' }}>
+                            {new Date(review.creation_date).toLocaleDateString()}
+                          </div>
+
+                          <p style={{ marginTop: '10px', fontSize: '1.3rem', color: '#333' }}>
+                            {snippet}... <span style={{ color: '#4b91d6', fontSize: '1rem' }}>читать далее</span>
+                          </p>
                         </div>
 
-                        <div style={{ alignSelf: 'flex-end', fontWeight: 'bold', fontSize: '1.3rem' }}>
-                          <FcLike style={{ fontSize: '1.4rem' }} /> {review.like_count}
+                        <div style={{ alignSelf: 'flex-end', fontWeight: 'bold', fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <FcLike style={{ fontSize: '1.4rem' }} /> {review.likes_number || 0}
                         </div>
                       </div>
                     </Link>
                   );
                 }) : (
-                  <p style={{ fontSize: '1.5rem', color: '#999' }}>Отзывы по выбранным фильтрам не найдены</p>
+                  <p style={{ fontSize: '1.5rem', color: '#999' }}>Отзывов пока нет</p>
                 )}
               </div>
             </>

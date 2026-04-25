@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import "./ReviewMaker.css";
 import { FcLike } from "react-icons/fc";
 import { FaStar } from "react-icons/fa";
-import cities from '/src/data/cities.js'
+import { useDispatch, useSelector } from 'react-redux';
+import test_photo from "/src/assets/kolomna.jpg"
+import { fetchCities } from '/src/store/citySlice';
+import { IoChevronBackOutline } from "react-icons/io5";
 
 const TAGS = [
     "Природа",
@@ -170,79 +173,84 @@ function SingleSelectButton({ selected, onClick, children, className }) {
 }
 
 function PhotoUploader({ photos = [], setPhotos }) {
-    const MAX = MAX_PHOTOS_PER_SECTION;
-
+    const MAX = 5;
     const handleFiles = e => {
         const files = Array.from(e.target.files);
-        const newPhotos = files.slice(0, MAX - photos.length);
-        if (newPhotos.length === 0) return;
-        newPhotos.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setPhotos(prev => [...prev, reader.result].slice(0, MAX));
-            };
-            reader.readAsDataURL(file);
-        });
+        const availableSlots = MAX - photos.length;
+        const newFiles = files.slice(0, availableSlots);
+
+        if (newFiles.length === 0) return;
+
+        const updatedPhotos = [...photos, ...newFiles];
+        setPhotos(updatedPhotos);
+
         e.target.value = null;
     };
+
 
     const removePhoto = index => {
         setPhotos(prev => prev.filter((_, i) => i !== index));
     };
 
-    const fileNamesText = photos.length > 0 ? `${photos.length} файл${photos.length > 1 ? "ов" : ""} выбран` : "Файлов не выбрано";
-
     return (
         <div>
             <div className="photo-uploader-wrapper">
-                <label htmlFor="photo-upload" className="photo-upload-button" aria-disabled={photos.length >= MAX}>
-                    Выбрать файлы
+                <label className="photo-upload-button">
+                    Выбрать файлы (до {MAX})
+                    <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleFiles}
+                        hidden
+                        disabled={photos.length >= MAX}
+                    />
                 </label>
-                <span className="photo-upload-text">{fileNamesText}</span>
+                <span className="photo-upload-text">
+                    {photos.length > 0 ? `Выбрано: ${photos.length}` : "Файлов не выбрано"}
+                </span>
             </div>
-            <input
-                id="photo-upload"
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleFiles}
-                disabled={photos.length >= MAX}
-                className="photo-input"
-            />
+
             <div className="photos-preview">
-                {console.log("photos:", photos)}
-                {console.log("typeof photos:", typeof photos)}
-                {console.log("setPhotos:", setPhotos)
-                }
-                {Array.isArray(photos) && photos.map((src, i) => (
+                {(Array.isArray(photos) ? photos : []).map((file, i) => (
                     <div key={i} className="photo-wrapper">
-                        <img src={src} alt={`Фото ${i + 1}`} className="photo-img" />
+                        <img
+                            src={file instanceof File ? URL.createObjectURL(file) : file}
+                            alt="preview"
+                            className="photo-img"
+                        />
                         <button
                             type="button"
                             onClick={() => removePhoto(i)}
                             className="photo-remove-button"
-                            aria-label="Удалить фото"
                         >
                             ×
                         </button>
                     </div>
                 ))}
             </div>
-
         </div>
     );
 }
 
-
 export default function ReviewFormAdvanced() {
     const navigate = useNavigate();
-    const [selectedCity, setSelectedCity] = useState(cities[0]);
+    const dispatch = useDispatch();
+    const citiesFromRedux = useSelector((state) => state.cities.list);
+    useEffect(() => {
+        dispatch(fetchCities());
+    }, [dispatch]);
+    const [selectedCity, setSelectedCity] = useState(null);
+    useEffect(() => {
+        if (citiesFromRedux.length > 0 && !selectedCity) {
+            setSelectedCity(citiesFromRedux[0]);
+        }
+    }, [citiesFromRedux, selectedCity]);
+
     const [budget, setBudget] = useState("");
     const [isLocal, setIsLocal] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [notification, setNotification] = useState(null);
-
-    const [cityRating, setCityRating] = useState(0);
     const [ratings, setRatings] = useState({
         Транспорт: 0,
         Чистота: 0,
@@ -259,8 +267,8 @@ export default function ReviewFormAdvanced() {
     const [texts, setTexts] = useState(() =>
         TEXT_SECTIONS.reduce((acc, s) => ({ ...acc, [s]: "" }), {})
     );
-    const [photos, setPhotos] = useState(() =>
-        TEXT_SECTIONS.reduce((acc, s) => ({ ...acc, [s]: [] }), {})
+    const [photos, setPhotos] = useState(
+        TEXT_SECTIONS.reduce((acc, section) => ({ ...acc, [section]: [] }), {})
     );
 
     const [customSections, setCustomSections] = useState([]);
@@ -279,6 +287,22 @@ export default function ReviewFormAdvanced() {
 
     const handleTextChange = (section, value) => {
         setTexts(prev => ({ ...prev, [section]: value }));
+    };
+    const [sectionPhotos, setSectionPhotos] = useState({});
+
+    const handleSectionPhotoChange = (sectionTitle, e) => {
+        const files = Array.from(e.target.files);
+        const alreadySelected = sectionPhotos[sectionTitle] || [];
+
+        if (alreadySelected.length + files.length > 5) {
+            alert("В один раздел можно загрузить не более 5 фотографий");
+            return;
+        }
+
+        setSectionPhotos({
+            ...sectionPhotos,
+            [sectionTitle]: [...alreadySelected, ...files]
+        });
     };
 
     const handlePhotosChange = (section, newPhotos) => {
@@ -302,39 +326,105 @@ export default function ReviewFormAdvanced() {
         setCustomSections(prev => prev.filter((_, i) => i !== index));
     };
 
-
     const saveDraft = () => {
         alert("Черновик сохранён!");
     };
-const publishReview = async () => {
-  try {
-    const combinedText = Object.values(texts).join("\n\n");
-    const response = await fetch("http://localhost:3000/moderate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        contentId: 1,
-        contentType: "review",
-        text: combinedText
-      })
-    });
+    const publishReview = async () => {
+        try {
+            if (!selectedCity) return alert("Выберите город");
 
-    if (!response.ok) {
-      throw new Error(`Ошибка сервера: ${response.status}`);
-    }
+            const token = localStorage.getItem('token');
+            const formData = new FormData();
 
-    const result = await response.json();
-    console.log("Результат модерации:", result);
+            const reviewData = {
+                city_id: Number(selectedCity.id),
+                season: selectedSeasons[0] || "",
+                budget: Number(budget) || 0,
+                tags: selectedTags,
+                transport_mark: Number(ratings["Транспорт"]) || 0,
+                cleanliness_mark: Number(ratings["Чистота"]) || 0,
+                preservation_mark: Number(ratings["Сохранность исторических сооружений"]) || 0,
+                safety_mark: Number(ratings["Безопасность"]) || 0,
+                hospitality_mark: Number(ratings["Гостеприимство"]) || 0,
+                price_quality_ratio: Number(ratings["Соотношение цена/качество"]) || 0,
+                with_little_kids_flag: selectedFeatures.includes("Поездка с младенцем"),
+                with_pets_flag: selectedFeatures.includes("Поездка с животными"),
+                physically_challenged_flag: selectedFeatures.includes("Путешественники с ограниченными возможностями"),
+                limited_mobility_flag: selectedFeatures.includes("Путешественники с ограниченной мобильностью"),
+                elderly_people_flag: selectedFeatures.includes("Пожилые путешественники"),
+                special_diet_flag: selectedFeatures.includes("Путешественники с особой диетой"),
+                pet: "",
+                type: tripType || "Другое",
+                main_photo: "",
+                sections: []
+            };
 
-    setIsSubmitted(true);
-  } catch (error) {
-    console.error("Ошибка при отправке отзыва:", error);
-    alert("Ошибка при отправке отзыва. Попробуйте позже.");
-  }
-};
+            Object.keys(texts).forEach((title, sIdx) => {
+                const currentSectionPhotos = Array.from(photos[title] || []);
+                const photoNames = [];
 
+                currentSectionPhotos.forEach((file, pIdx) => {
+                    if (file instanceof File) {
+                        const uniqueName = `s${sIdx}_p${pIdx}_${file.name.replace(/\s+/g, '_')}`;
+                        photoNames.push(uniqueName);
+
+                        formData.append(`photo_${uniqueName}`, file);
+
+                        if (!reviewData.main_photo) {
+                            reviewData.main_photo = uniqueName;
+                        }
+                    }
+                });
+                reviewData.sections.push({
+                    title: title,
+                    text: texts[title] || "",
+                    photos: photoNames,
+                    places: []
+                });
+            });
+
+            formData.append("review", JSON.stringify(reviewData));
+
+            const beResponse = await fetch("http://localhost:8081/review/create", {
+                method: "POST",
+                body: formData,
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            if (!beResponse.ok) {
+                const errText = await beResponse.text();
+                throw new Error(`Ошибка БД: ${beResponse.status} - ${errText}`);
+            }
+
+            const createdReview = await beResponse.json();
+
+            const newReviewId = createdReview.id;
+            if (!newReviewId) throw new Error("Бэкенд не вернул ID отзыва");
+            const combinedText = Object.values(texts).join("\n\n");
+
+            const modResponse = await fetch("http://localhost:3000/moderate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contentId: newReviewId,
+                    contentType: "review",
+                    text: combinedText
+                })
+            });
+
+            if (!modResponse.ok) {
+                console.warn("Микросервис модерации вернул ошибку, но отзыв уже сохранен в базе");
+            } else {
+                console.log("Модерация приняла запрос");
+            }
+
+            setIsSubmitted(true);
+
+        } catch (error) {
+            console.error("КРИТИЧЕСКАЯ ОШИБКА:", error);
+            alert(`Ошибка: ${error.message}`);
+        }
+    };
 
     if (isSubmitted) {
         return (
@@ -342,7 +432,7 @@ const publishReview = async () => {
                 <h2 style={{ fontSize: '3rem', marginTop: '3rem' }}>Спасибо за ваш отзыв!</h2>
                 <p style={{ fontSize: '1.3rem', marginTop: '2rem' }}>Ваш отзыв отправлен на модерацию и скоро появится на сайте.</p>
                 <button
-                    onClick={() => navigate("/profile")}
+                    onClick={() => navigate("/userProfile")}
                     style={{
                         marginTop: 20,
                         padding: "12px 24px",
@@ -363,13 +453,12 @@ const publishReview = async () => {
         <>
             <button
                 type="button"
-                onClick={() => navigate("/profile")}
-                className="btn-back"
-                aria-label="Вернуться в профиль"
-                style={{ marginLeft: '40rem', marginTop: '3rem', fontSize: '2rem' }}
+                onClick={() => navigate("/userProfile")}
+                className="review-maker-back-btn"
             >
-                ← Назад
+                <IoChevronBackOutline /> Вернуться в профиль
             </button>
+
             <div className="review-form-container">
                 {notification && (
                     <div className="notification">
@@ -385,29 +474,22 @@ const publishReview = async () => {
                     </label>
                     <select
                         id="city-select"
-                        value={selectedCity.city}
+                        value={selectedCity?.name || ""}
                         onChange={e => {
-                            const cityObj = cities.find(c => c.city === e.target.value);
+                            const cityObj = citiesFromRedux.find(c => c.name === e.target.value);
                             setSelectedCity(cityObj);
-                            setMapPoints([]);
                         }}
-                        style={{
-                            marginLeft: 12,
-                            padding: "8px 12px",
-                            fontSize: "1.8rem",
-                            borderRadius: 8,
-                            border: "2px solid #a3c644",
-                            color: "#2f4f1f",
-                            backgroundColor: "#f7fbe9",
-                            cursor: "pointer",
-                            minWidth: 200,
-                        }}
+                        className="city-select-input"
                     >
-                        {cities.map(city => (
-                            <option key={city.city} value={city.city}>
-                                {city.city} ({city.region})
-                            </option>
-                        ))}
+                        {citiesFromRedux.length === 0 ? (
+                            <option>Загрузка городов...</option>
+                        ) : (
+                            citiesFromRedux.map(city => (
+                                <option key={city.id} value={city.name}>
+                                    {city.name} ({city.region})
+                                </option>
+                            ))
+                        )}
                     </select>
                 </div>
 
@@ -474,6 +556,7 @@ const publishReview = async () => {
                         </SingleSelectButton>
                     ))}
                 </div>
+
                 <div className="budget-local-wrapper" style={{ marginTop: 20, marginBottom: 30 }}>
                     <label htmlFor="budget-input" style={{ fontWeight: "700", fontSize: "1.3rem", color: "#3a6b00", marginRight: 12 }}>
                         Бюджет поездки (примерно, ₽):
@@ -518,11 +601,11 @@ const publishReview = async () => {
                         />
                         <PhotoUploader
                             photos={photos[section] || []}
-                            setPhotos={newPhotos => handlePhotosChange(section, newPhotos)}
+                            setPhotos={(newPhotosArray) => handlePhotosChange(section, newPhotosArray)}
                         />
+
                     </div>
                 ))}
-
 
                 <h2>Кастомные разделы</h2>
                 {customSections.map((section, i) => (
@@ -559,7 +642,14 @@ const publishReview = async () => {
                         Добавить кастомный раздел
                     </button>
                 )}
-                <YandexMap points={mapPoints} setPoints={setMapPoints} center={selectedCity.coordinates} />
+                {selectedCity && (
+                    <YandexMap
+                        points={mapPoints}
+                        setPoints={setMapPoints}
+                        center={selectedCity.coordinates || [55.751244, 37.618423]}
+                    />
+                )}
+
                 <div className="buttons-submit">
                     <button onClick={publishReview} className="btn-publish">Опубликовать</button>
                     <button onClick={saveDraft} className="btn-draft">Сохранить черновик</button>

@@ -1,5 +1,5 @@
 const cities = [
-  { city: 'Москва', rating: 4.8, region: 'Москва', coordinates: { lat: 55.7558, lng: 37.6173 } },
+  { city: 'Москва', rating: 70, region: 'Москва', coordinates: { lat: 55.7558, lng: 37.6173 } },
   { city: 'Санкт-Петербург', rating: 4.7, region: 'Санкт-Петербург', coordinates: { lat: 59.9343, lng: 30.3351 } },
   { city: 'Казань', rating: 4.5, region: 'Республика Татарстан', coordinates: { lat: 55.7903, lng: 49.1347 } },
   { city: 'Новосибирск', rating: 4.3, region: 'Новосибирская область', coordinates: { lat: 55.0084, lng: 82.9357 } },

@@ -419,6 +419,33 @@
 .btn-draft:hover {
   background-color: #6f7a5f;
 }
+.review-maker-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f0f0f0;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    color: #555;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 2rem;
+    margin-left: 2rem;
+    width: fit-content;
+}
+
+.review-maker-back-btn:hover {
+    background-color: #a7bd70;
+    color: white;
+    transform: translateX(-5px);
+}
+
+.review-maker-back-btn svg {
+    font-size: 1.4rem;
+}
 .notification {
   position: fixed;
   top: 20px;
@@ -476,3 +503,4 @@
     min-height: 110px;
   }
 }
+

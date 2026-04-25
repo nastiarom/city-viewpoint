@@ -23,7 +23,7 @@ function BudgetSlider({ budgetRange, setBudgetRange }) {
 
   return (
     <div style={{ marginBottom: '1rem' }}>
-      <label><b style={{ fontSize:'1.4rem'}}>Бюджет (₽):</b></label>
+      <label><b style={{ fontSize: '1.4rem' }}>Бюджет (₽):</b></label>
       <div
         style={{
           display: 'flex',
@@ -33,7 +33,7 @@ function BudgetSlider({ budgetRange, setBudgetRange }) {
           justifyContent: 'center',
         }}
       >
-        <div style={{ width: '90%', marginTop:'2.4rem'}}>
+        <div style={{ width: '90%', marginTop: '2.4rem' }}>
           <Range
             step={STEP}
             min={MIN}
@@ -89,51 +89,50 @@ function BudgetSlider({ budgetRange, setBudgetRange }) {
           />
         </div>
       </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '1rem'}}>
-          <span style={{ whiteSpace: 'nowrap', fontSize: '1.3rem' }}>От:</span>
-          <input
-            type="number"
-            min={MIN}
-            max={budgetRange[1]}
-            step={STEP}
-            value={budgetRange[0]}
-            onChange={e => handleInputChange(0, e.target.value)}
-            style={{
-              width: '90px',
-              padding: '6px 8px',
-              fontSize: '1.2rem',
-              borderRadius: '4px',
-              border: '1px solid #ccc',
-              transition: 'background-color 0.3s ease',
-            }}
-            onFocus={e => (e.target.style.backgroundColor = '#a7bd70')}
-            onBlur={e => (e.target.style.backgroundColor = 'white')}
-          />
-          <span style={{ whiteSpace: 'nowrap', fontSize: '1.3rem' }}>₽</span>
-        </div>
-              {/* Поле "До" с текстом */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px',  marginTop: '0.5rem' }}>
-          <span style={{ whiteSpace: 'nowrap', fontSize: '1.3rem' }}>До:</span>
-          <input
-            type="number"
-            min={budgetRange[0]}
-            max={MAX}
-            step={STEP}
-            value={budgetRange[1]}
-            onChange={e => handleInputChange(1, e.target.value)}
-            style={{
-              width: '90px',
-              padding: '6px 8px',
-              fontSize: '1.2rem',
-              borderRadius: '4px',
-              border: '1px solid #ccc',
-              transition: 'background-color 0.3s ease',
-            }}
-            onFocus={e => (e.target.style.backgroundColor = '#a7bd70')}
-            onBlur={e => (e.target.style.backgroundColor = 'white')}
-          />
-            <span style={{ whiteSpace: 'nowrap', fontSize: '1.3rem' }}>₽</span>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '1rem' }}>
+        <span style={{ whiteSpace: 'nowrap', fontSize: '1.3rem' }}>От:</span>
+        <input
+          type="number"
+          min={MIN}
+          max={budgetRange[1]}
+          step={STEP}
+          value={budgetRange[0]}
+          onChange={e => handleInputChange(0, e.target.value)}
+          style={{
+            width: '90px',
+            padding: '6px 8px',
+            fontSize: '1.2rem',
+            borderRadius: '4px',
+            border: '1px solid #ccc',
+            transition: 'background-color 0.3s ease',
+          }}
+          onFocus={e => (e.target.style.backgroundColor = '#a7bd70')}
+          onBlur={e => (e.target.style.backgroundColor = 'white')}
+        />
+        <span style={{ whiteSpace: 'nowrap', fontSize: '1.3rem' }}>₽</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '0.5rem' }}>
+        <span style={{ whiteSpace: 'nowrap', fontSize: '1.3rem' }}>До:</span>
+        <input
+          type="number"
+          min={budgetRange[0]}
+          max={MAX}
+          step={STEP}
+          value={budgetRange[1]}
+          onChange={e => handleInputChange(1, e.target.value)}
+          style={{
+            width: '90px',
+            padding: '6px 8px',
+            fontSize: '1.2rem',
+            borderRadius: '4px',
+            border: '1px solid #ccc',
+            transition: 'background-color 0.3s ease',
+          }}
+          onFocus={e => (e.target.style.backgroundColor = '#a7bd70')}
+          onBlur={e => (e.target.style.backgroundColor = 'white')}
+        />
+        <span style={{ whiteSpace: 'nowrap', fontSize: '1.3rem' }}>₽</span>
+      </div>
     </div>
   );
 }

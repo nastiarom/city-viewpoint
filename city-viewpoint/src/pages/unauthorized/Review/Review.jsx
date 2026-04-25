@@ -1,17 +1,14 @@
 import { useParams } from 'react-router-dom';
 import ReviewHeader from '/src/components/ReviewHeader/ReviewHeader';
 import Footer from '../../../components/Footer/Footer';
-import reviews from '../../../data/reviews';
-import reviewsText from '../../../data/reviews_text';
-import users from '../../../data/users';
 import { FaStar } from 'react-icons/fa';
 import { TbMoneybag } from "react-icons/tb";
 import { FaRankingStar } from "react-icons/fa6";
 import { FcLike } from "react-icons/fc";
 import './Review.css';
-import { useState } from 'react';
-import commentsData from '../../../data/comments';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import ReviewMap from '../../../components/ReviewMap';
+import { useSelector } from 'react-redux';
 
 function formatDate(dateString) {
   const date = new Date(dateString);
@@ -72,16 +69,25 @@ function getStatusStyles(status) {
   }
 }
 
-
 function Review() {
   const { id } = useParams();
-  const reviewId = Number(id);
-  const review = reviews.find(r => r.id === reviewId);
-  const reviewText = reviewsText.find(rt => rt.review_id === reviewId);
+  const [fullReview, setFullReview] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { isAuth } = useSelector((state) => state.auth);
+  const [newComment, setNewComment] = useState("");
+  const [author, setAuthor] = useState(null);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+
+  const SERVER_URL = "http://localhost:8081/static/";
+  const USER_SERVER_URL = "http://localhost:8080/static/";
 
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [selectedReason, setSelectedReason] = useState('');
   const [customReason, setCustomReason] = useState('');
+  const [commentUsers, setCommentUsers] = useState({});
+  const [replyTo, setReplyTo] = useState(null);
 
   const reportReasons = [
     'Использование нецензурной лексики',
@@ -92,90 +98,359 @@ function Review() {
     'Другое',
   ];
 
+  useEffect(() => {
+    const fetchReviewData = async () => {
+      try {
+        setLoading(true);
+
+        const reviewRes = await fetch(`http://localhost:8081/review/get?review_id=${id}`);
+        if (!reviewRes.ok) throw new Error("Отзыв не найден");
+        const reviewData = await reviewRes.json();
+        setFullReview(reviewData);
+
+        if (reviewData.author_id) {
+          const authorRes = await fetch(`http://localhost:8080/user?user_id=${reviewData.author_id}`);
+          if (authorRes.ok) {
+            const authorData = await authorRes.json();
+            setAuthor(authorData);
+          }
+        }
+        const commentsRes = await fetch(`http://localhost:8082/comments/get?review_id=${id}`);
+        if (commentsRes.ok) {
+          const commentsData = await commentsRes.json();
+          setComments(commentsData);
+        }
+      } catch (err) {
+        console.error("Ошибка загрузки:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReviewData();
+  }, [id]);
+
+  useEffect(() => {
+    if (fullReview) {
+      setLikesCount(fullReview.likes_number || 0);
+    }
+  }, [fullReview]);
+
+  useEffect(() => {
+    const checkLikeStatus = async () => {
+      if (!isAuth) return;
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:8081/review/like?review_id=${id}`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setIsLiked(data.liked);
+        }
+      } catch (err) {
+        console.error("Ошибка проверки лайка:", err);
+      }
+    };
+
+    checkLikeStatus();
+  }, [id, isAuth]);
+
+  useEffect(() => {
+    const fetchMissingUsers = async () => {
+      if (!comments || comments.length === 0) return;
+      const uniqueUserIds = [...new Set(comments.map(c => c.user_id))]
+        .filter(id => !commentUsers[id]);
+
+      if (uniqueUserIds.length === 0) return;
+
+      const newUsers = { ...commentUsers };
+
+      await Promise.all(uniqueUserIds.map(async (uid) => {
+        try {
+          const res = await fetch(`http://localhost:8080/user?user_id=${uid}`);
+          if (res.ok) {
+            const userData = await res.json();
+            newUsers[uid] = userData;
+          }
+        } catch (err) {
+          console.error(`Ошибка загрузки юзера ${uid}:`, err);
+        }
+      }));
+
+      setCommentUsers(newUsers);
+    };
+
+    fetchMissingUsers();
+  }, [comments]);
+
+  const handleLikeClick = async () => {
+    if (!isAuth) {
+      alert("Авторизуйтесь, чтобы ставить лайки");
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    const method = isLiked ? "DELETE" : "POST";
+
+    console.log(`[LIKE DEBUG] Клик. Текущий статус: ${isLiked}, Метод: ${method}, Текущее кол-во: ${likesCount}`);
+
+    const wasLiked = isLiked;
+    const prevCount = likesCount;
+
+    setIsLiked(!wasLiked);
+    setLikesCount(prev => wasLiked ? Math.max(0, prev - 1) : prev + 1);
+
+    try {
+      const response = await fetch(`http://localhost:8081/review/like?review_id=${id}`, {
+        method: method,
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      console.log(`[LIKE DEBUG] Ответ сервера на ${method}:`, response.status);
+
+      if (!response.ok) {
+        throw new Error("Ошибка сервера при лайке");
+      }
+
+      const reviewRes = await fetch(`http://localhost:8081/review/get?review_id=${id}`);
+      if (reviewRes.ok) {
+        const updatedData = await reviewRes.json();
+        console.log(`[LIKE DEBUG] Данные из БД после лайка:`, {
+          likes_in_db: updatedData.likes_number,
+          is_liked_in_db: isLiked
+        });
+
+        setLikesCount(updatedData.likes_number);
+      }
+
+    } catch (err) {
+      console.error("[LIKE DEBUG] Ошибка:", err.message);
+      setIsLiked(wasLiked);
+      setLikesCount(prevCount);
+    }
+  };
+
+  const allPlaces = useMemo(() => {
+    if (!fullReview?.sections) return [];
+    return fullReview.sections.flatMap(section => section.places || []);
+  }, [fullReview]);
+
   const handleOpenReport = () => {
     setIsReportOpen(true);
     setSelectedReason('');
     setCustomReason('');
   };
 
-  const handleCloseReport = () => {
-    setIsReportOpen(false);
-  };
+  const handleCloseReport = () => setIsReportOpen(false);
 
-  const handleSubmitReport = (e) => {
+  const handleSubmitReport = async (e) => {
     e.preventDefault();
+
     let reasonToSave = selectedReason === 'Другое' ? customReason.trim() : selectedReason;
+
     if (!reasonToSave) {
       alert('Пожалуйста, выберите или укажите причину жалобы.');
       return;
     }
 
-    console.log('Жалоба отправлена. Причина:', reasonToSave);
-    alert('Спасибо! Ваша жалоба принята.');
-    setIsReportOpen(false);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch("http://localhost:8083/complaint/create/review", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          review_id: Number(id),
+          author_id: fullReview.author_id,
+          reason: reasonToSave
+        })
+      });
+
+      if (!response.ok) throw new Error("Ошибка при отправке жалобы");
+
+      alert('Спасибо! Ваша жалоба принята и будет рассмотрена модератором.');
+      setIsReportOpen(false);
+    } catch (err) {
+      console.error(err);
+      alert("Не удалось отправить жалобу: " + err.message);
+    }
   };
-  if (!review) {
-    return (
-      <>
-        <ReviewHeader />
-        <div>Отзыв с ID {id} не найден.</div>
-        <Footer />
-      </>
-    );
-  }
 
-  const user = users.find(u => u.id === review.author);
-  const nickname = user ? user.nickname : `Пользователь ID: ${review.author}`;
+  const handleAddComment = async (text, parentId = 0) => {
+    if (!newComment.trim()) return;
 
-  const getUserById = (id) => users.find(u => u.id === id);
+    try {
+      const token = localStorage.getItem('token');
 
-  const reviewComments = commentsData.filter(c => c.review_id === reviewId);
+      const response = await fetch(`http://localhost:8082/comment/create?review_id=${id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          text: newComment,
+          review_id: Number(id),
+          prev_comment_id: parentId
+        }),
+      });
 
-  const renderComments = (parentId = null, level = 0) => {
-    return reviewComments
-      .filter(c => c.reply_id === parentId)
+      if (!response.ok) throw new Error("Ошибка при создании комментария");
+
+      const data = await response.json();
+      const commentId = data.id;
+
+      fetch("http://localhost:3000/moderate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contentId: commentId,
+          contentType: "comment",
+          text: newComment
+        })
+      });
+
+      alert("Комментарий отправлен на модерацию!");
+      setNewComment("");
+      setReplyTo(null);
+
+      let attempts = 0;
+      const interval = setInterval(async () => {
+        attempts++;
+        const updatedComments = await refreshComments();
+        const isPublished = updatedComments?.some(c =>
+          Number(c.id) === Number(commentId) && c.status === 'published'
+        );
+
+        if (isPublished || attempts >= 15) {
+          clearInterval(interval);
+          console.log(isPublished ? `[OK] Коммент ${commentId} появился!` : "[TIMEOUT]");
+        }
+      }, 2000);
+    } catch (err) {
+      alert("Ошибка: " + err.message);
+    }
+  };
+
+  if (loading) return <div>Загрузка...</div>;
+  if (!fullReview) return <div>Отзыв не найден.</div>;
+
+  const review = fullReview;
+  const renderComments = (parentId = 0, level = 0) => {
+    return (comments || [])
+      .filter(c =>
+        Number(c.prev_comment_id) === parentId &&
+        c.status === 'published'
+      )
       .map(comment => {
-        const user = getUserById(comment.user_id);
+        const userData = commentUsers[comment.user_id];
+        const marginStep = level === 0 ? 0 : (level === 1 ? 50 : 0);
+        const formatText = (text) => {
+          const parts = text.split(/(@[\wА-Яа-я]+,)/g);
+          return parts.map((part, i) =>
+            part.startsWith('@')
+              ? <span key={i} style={{ color: '#a7bd70', fontWeight: 'normal' }}>{part}</span>
+              : part
+          );
+        };
+
         return (
-          <div key={comment.id} style={{ marginLeft: level * 30, marginBottom: '2rem', borderLeft: level ? '2px solid #ccc' : 'none', paddingLeft: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
+          <div key={comment.id} style={{
+            marginLeft: marginStep,
+            marginBottom: '3rem',
+            borderLeft: level === 1 ? '3px solid #a7bd70' : 'none',
+            paddingLeft: level === 1 ? '2rem' : '0'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.8rem' }}>
               <img
-                src={user?.photo || '/default-user-photo.png'}
-                alt={`Фото пользователя ${user?.nickname || 'Пользователь'}`}
-                style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover' }}
+                src={userData?.photo ? `${USER_SERVER_URL}${userData.photo}` : '/default-user-photo.png'}
+                style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover' }}
+                alt="avatar"
               />
-              <strong style={{ fontSize: '1.2rem' }}>{user?.nickname || 'Пользователь'}</strong>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <strong style={{ fontSize: '1.4rem' }}>{userData?.nickname || `Загрузка...`}</strong>
+                <span style={{ fontSize: '1rem', color: '#999' }}>{new Date(comment.created_at).toLocaleDateString()}</span>
+              </div>
             </div>
-            <p style={{ margin: 10, fontSize: '1.2rem', whiteSpace: 'pre-wrap' }}>{comment.text}</p>
+
+            <p style={{ margin: "5px 0 10px 60px", fontSize: '1.4rem', color: '#333', lineHeight: '1.5' }}>
+              {formatText(comment.text)}
+            </p>
+
+            {isAuth && (
+              <div style={{ marginLeft: '60px' }}>
+                <button
+                  onClick={() => {
+                    if (replyTo === comment.id) {
+                      setReplyTo(null);
+                    } else {
+                      const mention = `@${userData?.nickname || 'user'}, `;
+                      setReplyTo(comment.id);
+                      setNewComment(mention);
+                      setTimeout(() => {
+                        const el = document.getElementById(`reply-input-${comment.id}`);
+                        if (el) {
+                          el.focus();
+                          el.setSelectionRange(mention.length, mention.length);
+                        }
+                      }, 10);
+                    }
+                  }}
+                  style={{ background: 'none', border: 'none', color: '#4b91d6', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.2rem', padding: 0 }}
+                >
+                  {replyTo === comment.id ? "Отмена" : "Ответить"}
+                </button>
+
+                {replyTo === comment.id && (
+                  <div style={{ marginTop: '15px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    <textarea
+                      id={`reply-input-${comment.id}`}
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '2px solid #a7bd70', outline: 'none', fontSize: '1.3rem' }}
+                    />
+                    <button
+                      onClick={() => handleAddComment(newComment, comment.id)}
+                      style={{ backgroundColor: '#a7bd70', color: 'white', border: 'none', padding: '12px 30px', borderRadius: '30px', cursor: 'pointer', width: 'fit-content', alignSelf: 'center', fontSize: '1.2rem', fontWeight: 'bold' }}
+                    >
+                      Отправить ответ
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {renderComments(comment.id, level + 1)}
           </div>
         );
       });
   };
-  const allPlaces = [
-    ...(reviewText.general_places || []),
-    ...(reviewText.food_places || []),
-    ...(reviewText.accommodation_places || []),
-    ...(reviewText.lions_places || []),
-    ...(reviewText.peculiarities_places || []),
-  ];
 
-  if (reviewText.custom && Array.isArray(reviewText.custom)) {
-    reviewText.custom.forEach(customSection => {
-      if (customSection.places && Array.isArray(customSection.places)) {
-        allPlaces.push(...customSection.places);
+  const refreshComments = async () => {
+    try {
+      const res = await fetch(`http://localhost:8082/comments/get?review_id=${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setComments(data);
+        return data;
       }
-    });
-  }
+    } catch (err) {
+      console.error("Ошибка обновления комментов:", err);
+    }
+  };
+
   return (
-    <div  style={{backgroundColor:'white', backgroundImage:'none'}} >
+    <div style={{ backgroundColor: 'white', backgroundImage: 'none' }} >
       <ReviewHeader />
-      <main style={{ maxWidth: '1000px', margin: '2rem auto', padding: '0 1rem'}}>
+      <main style={{ maxWidth: '1000px', margin: '2rem auto', padding: '0 1rem' }}>
         <div className="review-top-row">
           <div style={{ display: 'flex', alignItems: 'center', fontSize: '18px', fontWeight: 'lighter' }}>
             <span className="user-photo-circle">
-              {user && user.photo ? (
-                <img src={user.photo} alt={`Фото пользователя ${nickname}`} />
+              {author && author.photo ? (
+                <img src={`${USER_SERVER_URL}${author.photo}`} alt={`Фото пользователя ${author.nickname}`} />
               ) : (
                 <img
                   src="/default-user-photo.png"
@@ -184,38 +459,42 @@ function Review() {
               )}
             </span>
             <div>
-              {nickname}
-              {user && user.status && (
+              {author?.nickname || "Аноним"}
+              {author && author.status && (
                 <span
                   style={{
                     marginTop: '4px',
                     marginLeft: '1rem',
                     padding: '2px 8px',
-                    border: `0.2rem solid ${getStatusStyles(user.status).borderColor}`,
+                    border: `0.2rem solid ${getStatusStyles(author.status).borderColor}`,
                     borderRadius: '8px',
                     fontSize: '1.1rem',
                     fontWeight: 'bold',
-                    color: getStatusStyles(user.status).color,
-                    backgroundColor: getStatusStyles(user.status).backgroundColor,
+                    color: getStatusStyles(author.status).color,
+                    backgroundColor: getStatusStyles(author.status).backgroundColor,
                     alignSelf: 'flex-start',
                     userSelect: 'none',
                   }}
                 >
-                  {user.status}
+                  {author.status}
                 </span>
               )}
             </div>
           </div>
-          <div style={{ fontSize: '18px', fontWeight: 'lighter' }}>{formatDate(review.date)}</div>
+          <div style={{ fontSize: '18px', fontWeight: 'lighter' }}>
+            {new Date(review.creation_date).toLocaleDateString()}
+          </div>
           <div>
-            <span className={`season-circle ${getSeasonClass(review.season)}`}>{review.season}</span>
+            <span className={`season-circle ${getSeasonClass(review.season)}`}>
+              {review.season}
+            </span>
           </div>
         </div>
         <div className="review-city-block">
           <h2>{review.city}</h2>
           <div className="review-region">{review.region}</div>
           <div className="review-tags">
-            {review.tags.map((tag, index) => (
+            {(review.tags || []).map((tag, index) => (
               <span key={index} className="review-tag">
                 {tag}
               </span>
@@ -224,35 +503,39 @@ function Review() {
         </div>
         <div className='review-ratings'>
           <p>
-            <Stars rating={review.transport} />
+            <Stars rating={review.transport_mark} />
             <strong>Транспорт</strong>
           </p>
           <p>
-            <Stars rating={review.cleanliness} />
+            <Stars rating={review.cleanliness_mark} />
             <strong>Чистота</strong>
           </p>
           <p>
-            <Stars rating={review.preservation} />
+            <Stars rating={review.preservation_mark} />
             <strong>Сохранность исторических сооружений</strong>
           </p>
           <p>
-            <Stars rating={review.safety} />
+            <Stars rating={review.safety_mark} />
             <strong>Безопасность</strong>
           </p>
           <p>
-            <Stars rating={review.hospitality} />
+            <Stars rating={review.hospitality_mark} />
             <strong>Гостеприимство</strong>
           </p>
           <p>
             <Stars rating={review.price_quality_ratio} />
             <strong>Соотношение цена/качество</strong>
           </p>
-          <p style={{ marginTop: '1rem' }}><strong><FaRankingStar style={{ marginRight: '4px', fontSize: '2rem' }} />Общая оценка города: </strong>{review.city_rating}</p>
+          <p style={{ marginTop: '1rem' }}>
+            <strong><FaRankingStar style={{ marginRight: '4px', fontSize: '2rem' }} />Общая оценка города: </strong>
+            {Number(review.review_mark).toFixed(2)}
+          </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '2rem', marginBottom: '1.2rem', marginTop: '1.2rem' }}>
           <TbMoneybag style={{ fontSize: '2.5rem' }} />
-          <p><strong></strong> {review.budget.toLocaleString('de-DE')} ₽</p>
+          <p><strong></strong> {review.budget ? review.budget.toLocaleString('de-DE') : 0} ₽</p>
         </div>
+
         <div
           className="review-trip-info"
           style={{
@@ -264,13 +547,13 @@ function Review() {
         >
           {[
             review.type && { label: review.type },
-            review.with_little_kids && { label: 'С младенцем' },
-            review.with_pets && { label: 'С животными' },
-            review.with_pets && review.pet && { label: review.pet },
-            review.physically_challenged && { label: 'Путешественники с ограниченными возможностями' },
-            review.limited_mobility && { label: 'Ограниченная мобильность' },
-            review.eldery_people && { label: 'Пожилые путешественники' },
-            review.special_diet && { label: 'Особая диета' },
+            review.with_little_kids_flag && { label: 'С младенцем' },
+            review.with_pets_flag && { label: 'С животными' },
+            review.with_pets_flag && review.pet && { label: review.pet },
+            review.physically_challenged_flag && { label: 'Путешественники с ограниченными возможностями' },
+            review.limited_mobility_flag && { label: 'Ограниченная мобильность' },
+            review.eldery_people_flag && { label: 'Пожилые путешественники' },
+            review.special_diet_flag && { label: 'Особая диета' },
           ]
             .filter(Boolean)
             .map(({ label }, idx) => (
@@ -290,198 +573,137 @@ function Review() {
             ))}
         </div>
 
-        {reviewText && (
-          <section className="review-text-sections" style={{ marginTop: '2rem' }}>
-            <h3>Общее</h3>
-            <p>{reviewText.general}</p>
-            <div style={{
-              display: 'flex',
-              gap: '0.5rem',
-              overflowX: 'auto',
-              paddingBottom: '0.3rem',
-              marginBottom: '2rem',
-            }}>
-              {review.main_photo && (
-                <img
-                  src={review.main_photo}
-                  alt={`Фото города ${review.city}`}
-                  style={{ height: '40rem', borderRadius: '8px', flexShrink: 0, objectFit: 'cover' }}
-                />
-              )}
-              {reviewText.general_photos && reviewText.general_photos.map((photo, idx) => (
-                <img
-                  key={idx}
-                  src={photo}
-                  alt={`Фото к разделу Общее ${idx + 1}`}
-                  style={{ height: '40rem', borderRadius: '8px', flexShrink: 0, objectFit: 'cover' }}
-                />
-              ))}
-            </div>
+        <section className="review-text-sections" style={{ marginTop: '2rem' }}>
+          {(review.sections || []).map((section, idx) => {
+            const hasText = section.text && section.text.trim().length > 0;
+            const hasPhotos = section.photos && section.photos.length > 0;
 
-            <h3>Еда</h3>
-            <p>{reviewText.food}</p>
-            <div style={{
-              display: 'flex',
-              gap: '0.5rem',
-              overflowX: 'auto',
-              paddingBottom: '0.3rem',
-              marginBottom: '2rem',
-            }}>
-              {reviewText.food_photos && reviewText.food_photos.map((photo, idx) => (
-                <img
-                  key={idx}
-                  src={photo}
-                  alt={`Фото к разделу Еда ${idx + 1}`}
-                  style={{ height: '40rem', borderRadius: '8px', flexShrink: 0, objectFit: 'cover' }}
-                />
-              ))}
-            </div>
-            <h3>Проживание</h3>
-            <p>{reviewText.accommodation}</p>
-            <div style={{
-              display: 'flex',
-              gap: '0.5rem',
-              overflowX: 'auto',
-              paddingBottom: '0.3rem',
-              marginBottom: '2rem',
-            }}>
-              {reviewText.accommodation_photos && reviewText.accommodation_photos.map((photo, idx) => (
-                <img
-                  key={idx}
-                  src={photo}
-                  alt={`Фото к разделу Проживание ${idx + 1}`}
-                  style={{ height: '40rem', borderRadius: '8px', flexShrink: 0, objectFit: 'cover' }}
-                />
-              ))}
-            </div>
-            <h3>Достопримечательности</h3>
-            <p>{reviewText.lions}</p>
-            <div style={{
-              display: 'flex',
-              gap: '0.5rem',
-              overflowX: 'auto',
-              paddingBottom: '0.3rem',
-              marginBottom: '2rem',
-            }}>
-              {reviewText.lions_photos && reviewText.lions_photos.map((photo, idx) => (
-                <img
-                  key={idx}
-                  src={photo}
-                  alt={`Фото к разделу Достопримечательности ${idx + 1}`}
-                  style={{ height: '40rem', borderRadius: '8px', flexShrink: 0, objectFit: 'cover' }}
-                />
-              ))}
-            </div>
-            <h3>Особенности</h3>
-            <p>{reviewText.peculiarities}</p>
-            <div style={{
-              display: 'flex',
-              gap: '0.5rem',
-              overflowX: 'auto',
-              paddingBottom: '0.3rem',
-              marginBottom: '2rem',
-            }}>
-              {reviewText.peculiarities_photos && reviewText.peculiarities_photos.map((photo, idx) => (
-                <img
-                  key={idx}
-                  src={photo}
-                  alt={`Фото к разделу Особенности ${idx + 1}`}
-                  style={{ height: '40rem', borderRadius: '8px', flexShrink: 0, objectFit: 'cover' }}
-                />
-              ))}
-            </div>
-            {reviewText.custom && reviewText.custom.length > 0 && reviewText.custom.map(({ name, text, photos }, idx) => (
-              <div key={idx} style={{ marginTop: '1rem', marginBottom: '2rem' }}>
-                <h3>{name}</h3>
-                <p>{text}</p>
-                {photos && photos.length > 0 && (
-                  <div style={{
-                    display: 'flex',
-                    gap: '0.5rem',
-                    overflowX: 'auto',
-                    paddingBottom: '0.3rem',
-                  }}>
-                    {photos.map((photo, pidx) => (
+            if (!hasText && !hasPhotos) return null;
+            return (
+              <div key={idx} style={{ marginBottom: '2.5rem' }}>
+                <h3>{section.title}</h3>
+                <p style={{ fontSize: '1.2rem', lineHeight: '1.6' }}>{section.text}</p>
+
+                {section.photos && section.photos.length > 0 && (
+                  <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '10px' }}>
+                    {section.photos.map((photo, pIdx) => (
                       <img
-                        key={pidx}
-                        src={photo}
-                        alt={`Фото к разделу ${name} ${pidx + 1}`}
-                        style={{ height: '40rem', borderRadius: '8px', flexShrink: 0, objectFit: 'cover' }}
+                        key={pIdx}
+                        src={`${SERVER_URL}${photo}`}
+                        alt={`${section.title} ${pIdx}`}
+                        style={{ height: '300px', borderRadius: '8px', objectFit: 'cover' }}
                       />
                     ))}
                   </div>
                 )}
               </div>
-            ))}
-          </section>
-        )}
+            )
+          })}
+        </section>
+
         <div>
-          <h2 style={{marginBottom:'1rem'}}>Места на карте</h2>
+          <h2 style={{ marginBottom: '1rem' }}>Места на карте</h2>
           {allPlaces.length > 0 ? (
-           <ReviewMap places={allPlaces} />
+            <ReviewMap places={allPlaces} />
           ) : (
-            <></>
+            <p>Места не указаны</p>
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '4rem' }}><FcLike style={{ fontSize: '3rem' }} /><p style={{ fontSize: '1.8rem' }}> {review.like_count}</p></div>
-        <p style={{ color: 'gray', marginTop: '2rem' }}><i>{nickname}, {formatDate(review.date)}</i> </p>
-        <div style={{ marginTop: '3rem', marginBottom: '3rem' }}>
-          <button
-            onClick={handleOpenReport}
+        <div
+          onClick={handleLikeClick}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            marginTop: '4rem',
+            cursor: isAuth ? 'pointer' : 'default',
+            userSelect: 'none'
+          }}
+        >
+          <FcLike
             style={{
-              backgroundColor: '#ffbbbb',
-              color: 'white',
-              border: '4px solid #c40000',
-              padding: '0.8rem 1.5rem',
-              fontSize: '1.4rem',
-              borderRadius: '20px',
-              cursor: 'pointer',
-              transition: 'background-color 0.3s',
-              fontWeight: 'bold',
-              color: '#7d0000'
+              fontSize: '3rem',
+              filter: isLiked ? 'none' : 'grayscale(100%) opacity(0.6)'
             }}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = '#b71c1c'}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = '#d32f2f'}
-          >
-            Пожаловаться
-          </button>
+          />
+          <p style={{ fontSize: '1.8rem', color: isLiked ? '#e91e63' : '#666' }}>
+            {likesCount}
+          </p>
         </div>
+
+        <p style={{ color: 'gray', marginTop: '2rem' }}>
+          <i>{author?.nickname}, {new Date(review.creation_date).toLocaleDateString()}</i>
+        </p>
+
+        <div style={{ marginTop: '3rem', marginBottom: '3rem', textAlign: 'center', position: 'relative', zIndex: 999 }}>
+          {isAuth ? (
+            <button
+              type="button"
+              onClick={() => {
+                console.log("Клик по кнопке жалобы!");
+                handleOpenReport();
+              }}
+              style={{
+                backgroundColor: '#d32f2f',
+                color: 'white',
+                border: 'none',
+                padding: '1rem 2rem',
+                fontSize: '1.4rem',
+                borderRadius: '30px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                boxShadow: '0 4px 10px rgba(211, 47, 47, 0.3)'
+              }}
+            >
+              Пожаловаться на отзыв
+            </button>
+          ) : (
+            <p style={{ color: '#888', fontStyle: 'italic' }}>
+              Авторизуйтесь, чтобы оставить жалобу.
+            </p>
+          )}
+        </div>
+
         {isReportOpen && (
           <div style={{
             position: 'fixed',
-            top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            zIndex: 10000,
+            zIndex: 99999,
           }}>
-            <form
-              onSubmit={handleSubmitReport}
+            <div
+              onClick={(e) => e.stopPropagation()}
               style={{
                 backgroundColor: 'white',
-                borderRadius: '8px',
-                padding: '2rem',
+                borderRadius: '15px',
+                padding: '2.5rem',
                 width: '90%',
                 maxWidth: '500px',
-                boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '1rem',
+                gap: '1.5rem',
+                color: '#333'
               }}
             >
-              <h2 style={{ margin: 0 }}>Пожаловаться на отзыв</h2>
-              <h3 style={{ margin: 0, color: 'grey' }}>Пожалуйста, укажите причину жалобы:</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <h2 style={{ margin: 0, color: '#d32f2f' }}>Пожаловаться на отзыв</h2>
+              <p style={{ margin: 0, color: '#666' }}>Выберите причину жалобы:</p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                 {reportReasons.map(reason => (
-                  <label key={reason} style={{ cursor: 'pointer', fontSize: '1.5rem' }}>
+                  <label key={reason} style={{ cursor: 'pointer', fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <input
                       type="radio"
                       name="reportReason"
                       value={reason}
                       checked={selectedReason === reason}
                       onChange={() => setSelectedReason(reason)}
-                      style={{ marginRight: '0.5rem' }}
                     />
                     {reason}
                   </label>
@@ -490,54 +712,77 @@ function Review() {
 
               {selectedReason === 'Другое' && (
                 <textarea
-                  placeholder="Опишите причину жалобы"
+                  placeholder="Опишите причину..."
                   value={customReason}
                   onChange={e => setCustomReason(e.target.value)}
-                  rows={4}
-                  style={{ resize: 'vertical', fontSize: '1rem', padding: '0.5rem' }}
-                  required
+                  rows={3}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #ccc' }}
                 />
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
                 <button
                   type="button"
                   onClick={handleCloseReport}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    fontSize: '1.5rem',
-                    borderRadius: '20px',
-                    border: '1px solid #ccc',
-                    backgroundColor: 'white',
-                    cursor: 'pointer',
-                  }}
+                  style={{ padding: '0.6rem 1.5rem', borderRadius: '20px', border: '1px solid #ccc', cursor: 'pointer' }}
                 >
                   Отмена
                 </button>
                 <button
-                  type="submit"
-                  style={{
-                    backgroundColor: '#d32f2f',
-                    color: 'white',
-                    border: 'none',
-                    padding: '0.5rem 1.5rem',
-                    fontSize: '1.5rem',
-                    borderRadius: '20px',
-                    cursor: 'pointer',
-                  }}
+                  onClick={handleSubmitReport}
+                  style={{ backgroundColor: '#d32f2f', color: 'white', border: 'none', padding: '0.6rem 2rem', borderRadius: '20px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
                   Отправить
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         )}
         <section style={{ marginTop: '3rem' }}>
-          <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Комментарии</h2>
-          <p style={{ fontStyle: 'italic', color: '#666', marginBottom: '1rem' }}>
-            Авторизуйтесь, чтобы оставлять комментарии.
-          </p>
-          {reviewComments.length === 0 ? (
+          <h2 style={{ fontSize: '2rem', marginBottom: '1.5rem' }}>Комментарии</h2>
+
+          {isAuth ? (
+            <div style={{ marginBottom: '3rem' }}>
+              <div style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '12px', backgroundColor: '#fff' }}>
+                <textarea
+                  placeholder="Напишите ваш комментарий..."
+                  value={!replyTo ? newComment : ""}
+                  onChange={(e) => !replyTo && setNewComment(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: 'none', fontSize: '1.2rem', outline: 'none', minHeight: '80px' }}
+                />
+              </div>
+              {!replyTo && (
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+                  <button
+                    onClick={() => handleAddComment(newComment, 0)}
+                    style={{
+                      backgroundColor: '#a7bd70',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 40px',
+                      borderRadius: '30px',
+                      fontSize: '1.1rem',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Опубликовать комментарий
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p style={{
+              backgroundColor: '#f9f9f9',
+              padding: '1rem',
+              borderRadius: '10px',
+              color: '#666',
+              marginBottom: '2rem'
+            }}>
+              Авторизуйтесь, чтобы оставлять комментарии.
+            </p>
+          )}
+          {(!comments || comments.length === 0) ? (
             <p style={{ fontStyle: 'italic', color: '#666' }}>Пока нет комментариев. Будьте первым!</p>
           ) : (
             <div>{renderComments()}</div>

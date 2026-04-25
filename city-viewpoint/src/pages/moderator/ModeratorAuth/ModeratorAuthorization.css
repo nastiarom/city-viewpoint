@@ -61,3 +61,34 @@
     background-color: rgba(74, 122, 15, 0.15);
     outline: none;
 }
+.access-denied-message {
+    text-align: center;
+    padding: 20px;
+}
+
+.access-denied-message p {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.link-to-user-auth {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #4b91d6;
+    color: white;
+    text-decoration: none;
+    border-radius: 30px;
+    width: fit-content;
+    font-weight: bold;
+}
+
+.btn-try-again {
+    background: none;
+    border: none;
+    color: #888;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 10px;
+}

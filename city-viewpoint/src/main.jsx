@@ -14,11 +14,14 @@ import ScrollToTop from './components/Assist/ScrollToTop.jsx'
 import ModerationProfile from './pages/moderator/ModeratorProfile/ModerationProfile.jsx'
 import UserProfile from './pages/authorized/Profile/Profile.jsx'
 import ReviewForm from './pages/authorized/ReviewMaker/ReviewMaker.jsx'
+import { UserAgreement } from './pages/unauthorized/UserAgreement/UserAgreement.jsx';
+import { PrivacyPolicy } from './pages/unauthorized/PrivacyPolicy/PrivacyPolicy.jsx';
+import { PersonalDataAgreement } from './pages/unauthorized/PersonalDataAgreement/PersonalDataAgreement.jsx';
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
     <StrictMode>
       <BrowserRouter>
-
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<App />} />
           <Route path="/authorization" element={<Authorization />} />
@@ -27,8 +30,11 @@ createRoot(document.getElementById('root')).render(
           <Route path="/reviewsList" element={<ReviewsList />} />
           <Route path="/modAuth" element={<ModeratorAuthorization />} />
           <Route path="/modProfile" element={<ModerationProfile />} />
-          <Route path="/userProfile/:email" element={<UserProfile />} />
+          <Route path="/userProfile" element={<UserProfile />} />
           <Route path="/reviewForm" element={<ReviewForm />} />
+          <Route path="/terms" element={<UserAgreement />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/personal-data" element={<PersonalDataAgreement />} />
         </Routes>
 
       </BrowserRouter>

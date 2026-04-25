@@ -1,13 +1,17 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import users from "/src/data/users.js";
 import "./UserProfile.css";
 import { FcLike } from "react-icons/fc";
 import { MdDraw } from "react-icons/md";
 import { RiDraftLine } from "react-icons/ri";
-
+import { fetchCities } from '/src/store/citySlice';
 import reviews from "/src/data/reviews.js";
 import reviewTexts from "/src/data/reviews_text.js";
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchUserProfile, logout } from '/src/store/authSlice';
+import CitySearch from '/src/components/CitySearch/CitySearch'
+import { MdOutlineRateReview } from "react-icons/md";
+import defaultAvatar from "/src/assets/avatar.png";
 
 function truncateText(text, maxLength = 200) {
     if (!text) return "";
@@ -63,46 +67,169 @@ function getStatusStyles(status) {
 }
 
 function UserProfile() {
-    const [showFavorites, setShowFavorites] = useState(false);
-    const { email } = useParams();
+    const dispatch = useDispatch();
     const navigate = useNavigate();
-
-
-    const decodedEmail = decodeURIComponent(email);
-    const currentUser = users.find(user => user.email === decodedEmail);
-
-    if (!currentUser) {
-        return <p>Пользователь не найден</p>;
-    }
-
-    const [nickname, setNickname] = useState(currentUser.nickname);
-    const [city, setCity] = useState(currentUser.city);
-    const [status] = useState(currentUser.status);
-    const [points] = useState(120);
-    const [photo, setPhoto] = useState(currentUser.photo);
+    const { user, loading, isAuth } = useSelector((state) => state.auth);
+    const allCities = useSelector((state) => state.cities.list);
+    const [nickname, setNickname] = useState("");
+    const [cityName, setCityName] = useState("");
+    const [selectedCityId, setSelectedCityId] = useState(0);
+    const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
+    const [showFavorites, setShowFavorites] = useState(false);
+    const [showPasswordForm, setShowPasswordForm] = useState(false);
+    const SERVER_URL = "http://localhost:8080/static/";
+    const [passwords, setPasswords] = useState({
+        oldPass: "",
+        newPass: "",
+        confirmPass: ""
+    });
     const fileInputRef = useRef(null);
-    const statusStyles = getStatusStyles(status);
-    const handlePhotoChange = e => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setPhoto(reader.result);
-            };
-            reader.readAsDataURL(file);
+
+    useEffect(() => {
+        dispatch(fetchUserProfile());
+        dispatch(fetchCities());
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (user) {
+            setNickname(user.nickname || "");
+            const currentCity = allCities.find(c => c.id === user.city || c.name === user.city);
+
+            setCityName(currentCity ? currentCity.name : (user.city || ""));
         }
-    };
+    }, [user, allCities]);
+
+
+    const currentDbCity = allCities.find(c => c.id === user?.city || c.name === user?.city);
+    const dbCityName = currentDbCity ? currentDbCity.name : "";
+    const isChanged =
+        nickname.trim() !== (user?.nickname || "").trim() ||
+        cityName.trim() !== dbCityName.trim();
+
+    const filteredCities = allCities.filter(c => {
+        const search = String(cityName || "").toLowerCase();
+        if (!search.trim()) return false;
+
+        const target = c.name.toLowerCase();
+        return target.includes(search) && target !== search;
+    });
+
 
     const handleLogout = () => {
-        navigate("/");
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+
+        dispatch(logout());
+        navigate("/authorization");
     };
 
-    const triggerFileSelect = () => {
-        if (fileInputRef.current) {
-            fileInputRef.current.click();
+
+    const handleProfileUpdate = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const cityObj = allCities.find(c => c.name === cityName);
+
+            const formData = new FormData();
+            formData.append("request", JSON.stringify({
+                nickname: nickname,
+                city: cityObj ? cityObj.id : 0
+            }));
+
+            const response = await fetch("http://localhost:8080/user/update", {
+                method: "PUT",
+                headers: { "Authorization": `Bearer ${token}` },
+                body: formData
+            });
+
+            if (!response.ok) throw new Error("Ошибка обновления");
+
+            alert("Сохранено!");
+            dispatch(fetchUserProfile());
+        } catch (error) {
+            alert(error.message);
         }
     };
 
+    const handlePassChange = (e) => {
+        setPasswords({ ...passwords, [e.target.name]: e.target.value });
+    };
+    const handlePasswordSubmit = async (e) => {
+        e.preventDefault();
+
+        if (passwords.newPass !== passwords.confirmPass) {
+            alert("Новые пароли не совпадают");
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            const formData = new FormData();
+            formData.append("request", JSON.stringify({
+                old_password: passwords.oldPass,
+                password: passwords.newPass
+            }));
+
+            const response = await fetch("http://localhost:8080/user/update", {
+                method: "PUT",
+                headers: { "Authorization": `Bearer ${token}` },
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Не удалось обновить пароль. Возможно, старый пароль неверен.");
+            }
+
+            alert("Пароль успешно изменен!");
+            setShowPasswordForm(false);
+            setPasswords({ oldPass: "", newPass: "", confirmPass: "" });
+        } catch (error) {
+            alert(error.message);
+        }
+    };
+
+    const handlePhotoChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const formData = new FormData();
+            const fileName = file.name;
+            const updateData = {
+                photo: fileName
+            };
+            formData.append("request", JSON.stringify(updateData));
+            formData.append(`photo_${fileName}`, file);
+
+            const response = await fetch("http://localhost:8080/user/update", {
+                method: "PUT",
+                headers: { "Authorization": `Bearer ${token}` },
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Ошибка при загрузке фото");
+            }
+
+            alert("Фото успешно обновлено!");
+            dispatch(fetchUserProfile());
+
+        } catch (err) {
+            console.error("Ошибка загрузки фото:", err);
+            alert(err.message);
+        }
+    };
+
+
+    const triggerFileSelect = () => fileInputRef.current?.click();
+    if (loading) return <p>Загрузка...</p>;
+    if (!isAuth) return <p>Доступ запрещен. Войдите в систему.</p>;
+    if (!user) return <p>Пользователь не найден</p>;
+
+    const statusStyles = getStatusStyles(user.status);
+    console.log(user)
     return (
         <>
             <div className={`profile-page ${showFavorites ? "shifted" : ""}`}>
@@ -117,7 +244,11 @@ function UserProfile() {
 
                 <div className="profile-photo-wrapper">
                     <img
-                        src={photo || "https://via.placeholder.com/150?text=Фото"}
+                        src={
+                            user.photo
+                                ? `${SERVER_URL}${user.photo}`
+                                : defaultAvatar
+                        }
                         alt="Фото профиля"
                         className="profile-photo"
                     />
@@ -136,13 +267,50 @@ function UserProfile() {
                         style={{ display: "none" }}
                     />
                 </div>
+                <div className="password-action-row" style={{ justifyContent: 'center', marginBottom: '1rem' }}>
+                    <button
+                        className="btn-change-pass-toggle"
+                        onClick={() => setShowPasswordForm(!showPasswordForm)}
+                    >
+                        {showPasswordForm ? "Отмена" : "Сменить пароль"}
+                    </button>
+                </div>
 
-
+                {showPasswordForm && (
+                    <form onSubmit={handlePasswordSubmit} className="password-update-form" style={{ margin: '15px auto' }}>
+                        <h3 style={{ textAlign: 'center', marginBottom: '10px' }}>Смена пароля</h3>
+                        <input
+                            type="password"
+                            name="oldPass"
+                            placeholder="Старый пароль"
+                            value={passwords.oldPass}
+                            onChange={handlePassChange}
+                            required
+                        />
+                        <input
+                            type="password"
+                            name="newPass"
+                            placeholder="Новый пароль"
+                            value={passwords.newPass}
+                            onChange={handlePassChange}
+                            required
+                        />
+                        <input
+                            type="password"
+                            name="confirmPass"
+                            placeholder="Повторите новый пароль"
+                            value={passwords.confirmPass}
+                            onChange={handlePassChange}
+                            required
+                        />
+                        <button type="submit" className="btn-save-pass">Сохранить</button>
+                    </form>
+                )}
                 <div className="input-group">
                     <label>E-mail</label>
                     <input
                         type="email"
-                        value={currentUser.email}
+                        value={user.email}
                         readOnly
                         className="readonly-input"
                     />
@@ -153,29 +321,76 @@ function UserProfile() {
                     <input
                         type="text"
                         value={nickname}
+                        placeholder="Введите ваше имя"
                         onChange={e => setNickname(e.target.value)}
                     />
                 </div>
 
-                <div className="input-group">
+
+                <div className="input-group" style={{ position: 'relative', overflow: 'visible' }}>
                     <label>Город проживания</label>
                     <input
                         type="text"
-                        value={city}
-                        onChange={e => setCity(e.target.value)}
+                        value={cityName}
+                        placeholder={user.city || "Выберите город"}
+                        onChange={(e) => {
+                            setCityName(e.target.value);
+                            setIsSuggestionsOpen(true);
+                        }}
+                        onFocus={() => setIsSuggestionsOpen(true)}
+                        onBlur={() => setTimeout(() => setIsSuggestionsOpen(false), 200)}
                     />
+
+                    {isSuggestionsOpen && cityName && filteredCities.length > 0 && (
+                        <ul className="profile-city-suggestions">
+                            {filteredCities.slice(0, 5).map((city) => (
+                                <li
+                                    key={city.id}
+                                    onMouseDown={() => {
+                                        setCityName(city.name);
+                                        setIsSuggestionsOpen(false);
+                                    }}
+                                >
+                                    {city.name}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+
+
                 </div>
+                {isChanged && (
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        width: '100%',
+                        marginTop: '20px',
+                        clear: 'both'
+                    }}>
+                        <button
+                            className="btn-save-pass"
+                            style={{
+                                width: 'auto',
+                                minWidth: '200px',
+                                padding: '10px 30px'
+                            }}
+                            onClick={handleProfileUpdate}
+                        >
+                            Сохранить изменения
+                        </button>
+                    </div>
+                )}
 
                 <div className="status-points-wrapper">
                     <div className="status" style={statusStyles}>
-                        {status}
+                        {user.status || "Новичок"}
                     </div>
                     <div className="status" style={statusStyles}>
-                        {points}
+                        {user.points || 0}
                     </div>
                 </div>
 
-                <div className="buttons-row">
+                <div className="buttons-row tertiary-buttons">
                     <button
                         onClick={() => setShowFavorites(true)}
                         className="btn-favorites"
@@ -183,10 +398,10 @@ function UserProfile() {
                         <div><FcLike /> Избранное</div>
                     </button>
                     <button
-                        onClick={() => navigate("/reviewForm")}
-                        className="btn-add-review"
+                        onClick={() => {/* TODO */ }}
+                        className="btn-my-reviews"
                     >
-                        <div><MdDraw /> Добавить отзыв</div>
+                        <div><MdOutlineRateReview style={{ color: '#b64a03' }} /> Мои отзывы</div>
                     </button>
                     <button
                         onClick={() => navigate("/drafts")}
@@ -195,6 +410,15 @@ function UserProfile() {
                         <div><RiDraftLine /> Черновики</div>
                     </button>
                 </div>
+                <div className="buttons-row primary-button-row">
+                    <button
+                        onClick={() => navigate("/reviewForm")}
+                        className="btn-add-review-large"
+                    >
+                        <MdDraw /> Добавить отзыв
+                    </button>
+                </div>
+
             </div>
             {showFavorites && <FavoritesPanel onClose={() => setShowFavorites(false)} />}
         </>

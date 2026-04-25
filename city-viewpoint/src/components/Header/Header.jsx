@@ -6,10 +6,10 @@ import CitySearch from '../CitySearch/CitySearch'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchCities } from '../../store/citySlice'
 
-function Header() {
+function Header({ userCity }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [selectedCity, setSelectedCity] = useState('')
-  
+
   const dispatch = useDispatch()
   const cities = useSelector((state) => state.cities.list)
 
@@ -17,17 +17,22 @@ function Header() {
     dispatch(fetchCities())
   }, [dispatch])
 
+  useEffect(() => {
+    if (userCity) {
+      setSelectedCity(userCity);
+    }
+  }, [userCity]);
+
   return (
     <nav>
       <div className="nav-left">
         <Link to="/"><img src={logo} alt="CityViewpoint" className='logo' /></Link>
-        <CitySearch 
-          onSelect={setSelectedCity} 
-          initialCities={cities} 
+        <CitySearch
+          initialCities={cities}
         />
       </div>
       <div className="nav-center">
-        <p className='yourCity'>Ваш город: {selectedCity || 'Москва'}</p>
+        <p className='yourCity'>Ваш город: {selectedCity || 'не выбран'}</p>
       </div>
 
       <div className="nav-right">
@@ -37,12 +42,13 @@ function Header() {
           <span></span>
         </div>
         <ul className={menuOpen ? "open" : ""}>
-          <li><Link to="/authorization">Вход</Link></li>
-          <li><Link to="/registration" className='reg'>Регистрация</Link></li>
+          <li><Link to="/authorization" onClick={() => setMenuOpen(false)}>Вход</Link></li>
+          <li><Link to="/registration" className='reg' onClick={() => setMenuOpen(false)}>Регистрация</Link></li>
         </ul>
       </div>
     </nav>
   )
 }
+
 
 export default Header

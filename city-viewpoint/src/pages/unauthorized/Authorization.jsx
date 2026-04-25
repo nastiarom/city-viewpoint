@@ -3,10 +3,13 @@ import { useNavigate } from "react-router-dom";
 import bgBig from "/src/assets/reg_background_big.jpg";
 import bgSmall from "/src/assets/reg_background_small.jpg";
 import "./Authorization.css";
+import { useDispatch } from 'react-redux';
+import { setToken } from '../../store/authSlice';
+import { fetchUserProfile, logout } from '/src/store/authSlice';
 
 function Authorization() {
   const navigate = useNavigate();
-
+  const dispatch = useDispatch();
   const backToHome = () => {
     window.location.href = "/";
   };
@@ -34,10 +37,56 @@ function Authorization() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    navigate(`/userProfile/${encodeURIComponent(form.email)}`);
+    if (form.email.length === 0 || form.password.length === 0) {
+      alert("Не все поля заполнены");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:8080/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password
+        }),
+      });
+
+      if (response.status === 401) {
+        alert("Неправильный логин или пароль");
+        return;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Ошибка при входе");
+      }
+
+      const data = await response.json();
+      const token = data.token;
+      localStorage.setItem('token', token);
+      localStorage.setItem('userId', data.userId);
+      dispatch(setToken(data.token));
+
+      const userProfile = await dispatch(fetchUserProfile()).unwrap();
+      const role = userProfile.role;
+
+      if (role === 'admin' || role === 'moderator') {
+        navigate("/modProfile");
+      } else {
+        navigate("/userProfile");
+      }
+
+    } catch (error) {
+      console.error("Ошибка верификации:", error);
+      alert(error.message || "Ошибка при входе. Попробуйте еще раз.");
+    }
+
   };
 
   const goToRegistration = () => {

@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import bgBig from "/src/assets/reg_background_big.jpg";
 import bgSmall from "/src/assets/reg_background_small.jpg";
 import "./Registration.css";
-
+import { Link } from 'react-router-dom';
+import defaultAvatar from "/src/assets/avatar.png";
 function Registration() {
   const navigate = useNavigate();
 
@@ -12,7 +13,11 @@ function Registration() {
   };
 
   const [isSmallScreen, setIsSmallScreen] = React.useState(window.innerWidth <= 600);
-
+  const getFileFromAsset = async (assetPath) => {
+    const response = await fetch(assetPath);
+    const blob = await response.blob();
+    return new File([blob], "avatar.png", { type: "image/png" });
+  };
   React.useEffect(() => {
     const handleResize = () => {
       setIsSmallScreen(window.innerWidth <= 600);
@@ -27,9 +32,11 @@ function Registration() {
 
   const [form, setForm] = useState({
     email: "",
-    username: "",
+    nickname: "",
     password: "",
-    passwordConfirm: ""
+    passwordConfirm: "",
+    agreedToTerms: false,
+    agreedToData: false
   });
 
   const [isCodeSent, setIsCodeSent] = useState(false);
@@ -39,7 +46,11 @@ function Registration() {
   const timerIdRef = useRef(null);
 
   const handleChange = e => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    setForm({
+      ...form,
+      [name]: type === "checkbox" ? checked : value
+    });
   };
 
   const handleCodeChange = e => {
@@ -62,23 +73,117 @@ function Registration() {
     }, 1000);
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (form.password !== form.passwordConfirm) {
       alert("Пароли не совпадают");
       return;
     }
-    setIsCodeSent(true);
-    startTimer();
 
+    if (!form.agreedToTerms || !form.agreedToData) {
+      alert("Пожалуйста, примите условия соглашений");
+      return;
+    }
+
+    try {
+      const fileName = "avatar.png";
+      const registrationData = {
+        email: form.email,
+        nickname: form.nickname,
+        password: form.password,
+        role: "user",
+        status: "Новичок",
+        agreement_pd: form.agreedToData,
+        agreement_ea: form.agreedToTerms,
+        photo: fileName
+      };
+
+      const formData = new FormData();
+      formData.append("request", JSON.stringify(registrationData));
+      const photoFile = await getFileFromAsset(defaultAvatar);
+      formData.append(`photo_${fileName}`, photoFile);
+
+      const response = await fetch("http://localhost:8080/register", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Ошибка регистрации");
+      }
+
+      setIsCodeSent(true);
+      startTimer();
+
+    } catch (error) {
+      console.error("Ошибка:", error);
+      alert(error.message);
+    }
   };
 
-  const handleConfirmSubmit = e => {
-    e.preventDefault();
-    alert(`Введён код: ${confirmationCode}`);
-    navigate(`/userProfile/${encodeURIComponent(form.email)}`);
+  const autoLogin = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password
+        }),
+      });
 
+      if (response.ok) {
+        const authData = await response.json();
+        localStorage.setItem("token", authData.token);
+        console.log("Автоматический вход выполнен");
+      }
+    } catch (error) {
+      console.error("Ошибка авто-логина:", error);
+    }
+  };
+  const handleConfirmSubmit = async (e) => {
+    e.preventDefault();
+
+    if (confirmationCode.length !== 6) {
+      alert("Код должен состоять из 6 символов");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:8080/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: form.email,
+          code: confirmationCode
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Ошибка при подтверждении");
+      }
+
+      const data = await response.json();
+
+      if (data.verified === true) {
+        await autoLogin();
+
+        alert("Почта подтверждена! Добро пожаловать.");
+        navigate(`/userProfile`);
+      } else {
+        alert("Введен неверный код.");
+        setConfirmationCode("");
+      }
+
+    } catch (error) {
+      console.error("Ошибка верификации:", error);
+      alert(error.message || "Ошибка при проверке кода.");
+    }
   };
 
   const handleResendCode = () => {
@@ -122,12 +227,12 @@ function Registration() {
             />
             <input
               type="text"
-              name="username"
+              name="nickname"
               placeholder="Имя пользователя"
-              value={form.username}
+              value={form.nickname}
               onChange={handleChange}
               required
-              autoComplete="username"
+              autoComplete="nickname"
             />
             <input
               type="password"
@@ -147,6 +252,31 @@ function Registration() {
               required
               autoComplete="new-password"
             />
+            <div className="checkbox-group" style={{ marginBottom: "1rem", textAlign: "left" }}>
+              <label style={{ color: "white", fontSize: "1.1rem", display: "flex", alignItems: "center", marginBottom: "0.5rem", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  name="agreedToTerms"
+                  checked={form.agreedToTerms}
+                  onChange={handleChange}
+                  required
+                  style={{ marginRight: "10px", width: "20px", height: "20px" }}
+                />
+                <span>Я согласен с <Link to="/terms" style={{ color: "#a7bd70" }}>пользовательским соглашением</Link></span>
+              </label>
+
+              <label style={{ color: "white", fontSize: "1.1rem", display: "flex", alignItems: "center", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  name="agreedToData"
+                  checked={form.agreedToData}
+                  onChange={handleChange}
+                  required
+                  style={{ marginRight: "10px", width: "20px", height: "20px" }}
+                />
+                <span>Даю согласие на <Link to="/personal-data" style={{ color: "#a7bd70" }}>обработку персональных данных</Link></span>
+              </label>
+            </div>
             <div style={{ display: "flex" }}>
               <button style={{ background: "#9c9b9bab", marginRight: "20px", width: "170px" }}>
                 Вход
