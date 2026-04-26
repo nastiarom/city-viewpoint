@@ -9,6 +9,8 @@ import './Review.css';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import ReviewMap from '../../../components/ReviewMap';
 import { useSelector } from 'react-redux';
+import html2pdf from 'html2pdf.js';
+import default_user_photo from '/src/assets/avatar.png'
 
 function formatDate(dateString) {
   const date = new Date(dateString);
@@ -192,9 +194,6 @@ function Review() {
 
     const token = localStorage.getItem('token');
     const method = isLiked ? "DELETE" : "POST";
-
-    console.log(`[LIKE DEBUG] Клик. Текущий статус: ${isLiked}, Метод: ${method}, Текущее кол-во: ${likesCount}`);
-
     const wasLiked = isLiked;
     const prevCount = likesCount;
 
@@ -207,8 +206,6 @@ function Review() {
         headers: { "Authorization": `Bearer ${token}` }
       });
 
-      console.log(`[LIKE DEBUG] Ответ сервера на ${method}:`, response.status);
-
       if (!response.ok) {
         throw new Error("Ошибка сервера при лайке");
       }
@@ -216,11 +213,6 @@ function Review() {
       const reviewRes = await fetch(`http://localhost:8081/review/get?review_id=${id}`);
       if (reviewRes.ok) {
         const updatedData = await reviewRes.json();
-        console.log(`[LIKE DEBUG] Данные из БД после лайка:`, {
-          likes_in_db: updatedData.likes_number,
-          is_liked_in_db: isLiked
-        });
-
         setLikesCount(updatedData.likes_number);
       }
 
@@ -230,7 +222,18 @@ function Review() {
       setLikesCount(prevCount);
     }
   };
+  const handleSavePDF = () => {
+    const element = document.getElementById('review-content');
+    const opt = {
+      margin: 10,
+      filename: `Отзыв_${review.city}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
 
+    html2pdf().set(opt).from(element).save();
+  };
   const allPlaces = useMemo(() => {
     if (!fullReview?.sections) return [];
     return fullReview.sections.flatMap(section => section.places || []);
@@ -446,161 +449,162 @@ function Review() {
     <div style={{ backgroundColor: 'white', backgroundImage: 'none' }} >
       <ReviewHeader />
       <main style={{ maxWidth: '1000px', margin: '2rem auto', padding: '0 1rem' }}>
-        <div className="review-top-row">
-          <div style={{ display: 'flex', alignItems: 'center', fontSize: '18px', fontWeight: 'lighter' }}>
-            <span className="user-photo-circle">
-              {author && author.photo ? (
-                <img src={`${USER_SERVER_URL}${author.photo}`} alt={`Фото пользователя ${author.nickname}`} />
-              ) : (
-                <img
-                  src="/default-user-photo.png"
-                  alt="Фото по умолчанию"
-                />
-              )}
-            </span>
-            <div>
-              {author?.nickname || "Аноним"}
-              {author && author.status && (
-                <span
-                  style={{
-                    marginTop: '4px',
-                    marginLeft: '1rem',
-                    padding: '2px 8px',
-                    border: `0.2rem solid ${getStatusStyles(author.status).borderColor}`,
-                    borderRadius: '8px',
-                    fontSize: '1.1rem',
-                    fontWeight: 'bold',
-                    color: getStatusStyles(author.status).color,
-                    backgroundColor: getStatusStyles(author.status).backgroundColor,
-                    alignSelf: 'flex-start',
-                    userSelect: 'none',
-                  }}
-                >
-                  {author.status}
-                </span>
-              )}
-            </div>
-          </div>
-          <div style={{ fontSize: '18px', fontWeight: 'lighter' }}>
-            {new Date(review.creation_date).toLocaleDateString()}
-          </div>
-          <div>
-            <span className={`season-circle ${getSeasonClass(review.season)}`}>
-              {review.season}
-            </span>
-          </div>
-        </div>
-        <div className="review-city-block">
-          <h2>{review.city}</h2>
-          <div className="review-region">{review.region}</div>
-          <div className="review-tags">
-            {(review.tags || []).map((tag, index) => (
-              <span key={index} className="review-tag">
-                {tag}
+        <div id="review-content">
+          <div className="review-top-row">
+            <div style={{ display: 'flex', alignItems: 'center', fontSize: '18px', fontWeight: 'lighter' }}>
+              <span className="user-photo-circle">
+                {author && author.photo ? (
+                  <img src={`${USER_SERVER_URL}${author.photo}`} alt={`Фото пользователя ${author.nickname}`} />
+                ) : (
+                  <img
+                    src={default_user_photo}
+                    alt="Фото по умолчанию"
+                  />
+                )}
               </span>
-            ))}
-          </div>
-        </div>
-        <div className='review-ratings'>
-          <p>
-            <Stars rating={review.transport_mark} />
-            <strong>Транспорт</strong>
-          </p>
-          <p>
-            <Stars rating={review.cleanliness_mark} />
-            <strong>Чистота</strong>
-          </p>
-          <p>
-            <Stars rating={review.preservation_mark} />
-            <strong>Сохранность исторических сооружений</strong>
-          </p>
-          <p>
-            <Stars rating={review.safety_mark} />
-            <strong>Безопасность</strong>
-          </p>
-          <p>
-            <Stars rating={review.hospitality_mark} />
-            <strong>Гостеприимство</strong>
-          </p>
-          <p>
-            <Stars rating={review.price_quality_ratio} />
-            <strong>Соотношение цена/качество</strong>
-          </p>
-          <p style={{ marginTop: '1rem' }}>
-            <strong><FaRankingStar style={{ marginRight: '4px', fontSize: '2rem' }} />Общая оценка города: </strong>
-            {Number(review.review_mark).toFixed(2)}
-          </p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '2rem', marginBottom: '1.2rem', marginTop: '1.2rem' }}>
-          <TbMoneybag style={{ fontSize: '2.5rem' }} />
-          <p><strong></strong> {review.budget ? review.budget.toLocaleString('de-DE') : 0} ₽</p>
-        </div>
-
-        <div
-          className="review-trip-info"
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '0.5rem',
-            marginBottom: '1rem',
-          }}
-        >
-          {[
-            review.type && { label: review.type },
-            review.with_little_kids_flag && { label: 'С младенцем' },
-            review.with_pets_flag && { label: 'С животными' },
-            review.with_pets_flag && review.pet && { label: review.pet },
-            review.physically_challenged_flag && { label: 'Путешественники с ограниченными возможностями' },
-            review.limited_mobility_flag && { label: 'Ограниченная мобильность' },
-            review.eldery_people_flag && { label: 'Пожилые путешественники' },
-            review.special_diet_flag && { label: 'Особая диета' },
-          ]
-            .filter(Boolean)
-            .map(({ label }, idx) => (
-              <div
-                key={idx}
-                style={{
-                  border: '1px solid #ccc',
-                  borderRadius: '50px',
-                  padding: '0.3rem 0.8rem',
-                  fontSize: '1.4rem',
-                  whiteSpace: 'nowrap',
-                  fontWeight: 'lighter',
-                }}
-              >
-                <strong>{label}</strong>
-              </div>
-            ))}
-        </div>
-
-        <section className="review-text-sections" style={{ marginTop: '2rem' }}>
-          {(review.sections || []).map((section, idx) => {
-            const hasText = section.text && section.text.trim().length > 0;
-            const hasPhotos = section.photos && section.photos.length > 0;
-
-            if (!hasText && !hasPhotos) return null;
-            return (
-              <div key={idx} style={{ marginBottom: '2.5rem' }}>
-                <h3>{section.title}</h3>
-                <p style={{ fontSize: '1.2rem', lineHeight: '1.6' }}>{section.text}</p>
-
-                {section.photos && section.photos.length > 0 && (
-                  <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '10px' }}>
-                    {section.photos.map((photo, pIdx) => (
-                      <img
-                        key={pIdx}
-                        src={`${SERVER_URL}${photo}`}
-                        alt={`${section.title} ${pIdx}`}
-                        style={{ height: '300px', borderRadius: '8px', objectFit: 'cover' }}
-                      />
-                    ))}
-                  </div>
+              <div>
+                {author?.nickname || "Аноним"}
+                {author && author.status && (
+                  <span
+                    style={{
+                      marginTop: '4px',
+                      marginLeft: '1rem',
+                      padding: '2px 8px',
+                      border: `0.2rem solid ${getStatusStyles(author.status).borderColor}`,
+                      borderRadius: '8px',
+                      fontSize: '1.1rem',
+                      fontWeight: 'bold',
+                      color: getStatusStyles(author.status).color,
+                      backgroundColor: getStatusStyles(author.status).backgroundColor,
+                      alignSelf: 'flex-start',
+                      userSelect: 'none',
+                    }}
+                  >
+                    {author.status}
+                  </span>
                 )}
               </div>
-            )
-          })}
-        </section>
+            </div>
+            <div style={{ fontSize: '18px', fontWeight: 'lighter' }}>
+              {new Date(review.creation_date).toLocaleDateString()}
+            </div>
+            <div>
+              <span className={`season-circle ${getSeasonClass(review.season)}`}>
+                {review.season}
+              </span>
+            </div>
+          </div>
+          <div className="review-city-block">
+            <h2>{review.city}</h2>
+            <div className="review-region">{review.region}</div>
+            <div className="review-tags">
+              {(review.tags || []).map((tag, index) => (
+                <span key={index} className="review-tag">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className='review-ratings'>
+            <p>
+              <Stars rating={review.transport_mark} />
+              <strong>Транспорт</strong>
+            </p>
+            <p>
+              <Stars rating={review.cleanliness_mark} />
+              <strong>Чистота</strong>
+            </p>
+            <p>
+              <Stars rating={review.preservation_mark} />
+              <strong>Сохранность исторических сооружений</strong>
+            </p>
+            <p>
+              <Stars rating={review.safety_mark} />
+              <strong>Безопасность</strong>
+            </p>
+            <p>
+              <Stars rating={review.hospitality_mark} />
+              <strong>Гостеприимство</strong>
+            </p>
+            <p>
+              <Stars rating={review.price_quality_ratio} />
+              <strong>Соотношение цена/качество</strong>
+            </p>
+            <p style={{ marginTop: '1rem' }}>
+              <strong><FaRankingStar style={{ marginRight: '4px', fontSize: '2rem' }} />Общая оценка города: </strong>
+              {Number(review.review_mark).toFixed(2)}
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '2rem', marginBottom: '1.2rem', marginTop: '1.2rem' }}>
+            <TbMoneybag style={{ fontSize: '2.5rem' }} />
+            <p><strong></strong> {review.budget ? review.budget.toLocaleString('de-DE') : 0} ₽</p>
+          </div>
 
+          <div
+            className="review-trip-info"
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '0.5rem',
+              marginBottom: '1rem',
+            }}
+          >
+            {[
+              review.type && { label: review.type },
+              review.with_little_kids_flag && { label: 'С младенцем' },
+              review.with_pets_flag && { label: 'С животными' },
+              review.with_pets_flag && review.pet && { label: review.pet },
+              review.physically_challenged_flag && { label: 'Путешественники с ограниченными возможностями' },
+              review.limited_mobility_flag && { label: 'Ограниченная мобильность' },
+              review.eldery_people_flag && { label: 'Пожилые путешественники' },
+              review.special_diet_flag && { label: 'Особая диета' },
+            ]
+              .filter(Boolean)
+              .map(({ label }, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    border: '1px solid #ccc',
+                    borderRadius: '50px',
+                    padding: '0.3rem 0.8rem',
+                    fontSize: '1.4rem',
+                    whiteSpace: 'nowrap',
+                    fontWeight: 'lighter',
+                  }}
+                >
+                  <strong>{label}</strong>
+                </div>
+              ))}
+          </div>
+
+          <section className="review-text-sections" style={{ marginTop: '2rem' }}>
+            {(review.sections || []).map((section, idx) => {
+              const hasText = section.text && section.text.trim().length > 0;
+              const hasPhotos = section.photos && section.photos.length > 0;
+
+              if (!hasText && !hasPhotos) return null;
+              return (
+                <div key={idx} style={{ marginBottom: '2.5rem' }}>
+                  <h3>{section.title}</h3>
+                  <p style={{ fontSize: '1.2rem', lineHeight: '1.6' }}>{section.text}</p>
+
+                  {section.photos && section.photos.length > 0 && (
+                    <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '10px' }}>
+                      {section.photos.map((photo, pIdx) => (
+                        <img
+                          key={pIdx}
+                          src={`${SERVER_URL}${photo}`}
+                          alt={`${section.title} ${pIdx}`}
+                          style={{ height: '300px', borderRadius: '8px', objectFit: 'cover' }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </section>
+        </div>
         <div>
           <h2 style={{ marginBottom: '1rem' }}>Места на карте</h2>
           {allPlaces.length > 0 ? (
@@ -738,6 +742,21 @@ function Review() {
             </div>
           </div>
         )}
+        <button
+          onClick={handleSavePDF}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#a7bd70',
+            color: 'white',
+            border: 'none',
+            borderRadius: '20px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            marginBottom: '10px'
+          }}
+        >
+          Скачать PDF
+        </button>
         <section style={{ marginTop: '3rem' }}>
           <h2 style={{ fontSize: '2rem', marginBottom: '1.5rem' }}>Комментарии</h2>
 
