@@ -54,6 +54,7 @@ function getSeasonClass(season) {
       return '';
   }
 }
+
 function getStatusStyles(status) {
   switch (status) {
     case 'Новичок':
@@ -182,7 +183,6 @@ function Review() {
 
       setCommentUsers(newUsers);
     };
-
     fetchMissingUsers();
   }, [comments]);
 
@@ -217,16 +217,16 @@ function Review() {
       }
 
     } catch (err) {
-      console.error("[LIKE DEBUG] Ошибка:", err.message);
       setIsLiked(wasLiked);
       setLikesCount(prevCount);
     }
   };
+
   const handleSavePDF = () => {
     const element = document.getElementById('review-content');
     const opt = {
       margin: 10,
-      filename: `Отзыв_${review.city}.pdf`,
+      filename: `Отзыв_cityviewpoint.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -234,6 +234,7 @@ function Review() {
 
     html2pdf().set(opt).from(element).save();
   };
+  
   const allPlaces = useMemo(() => {
     if (!fullReview?.sections) return [];
     return fullReview.sections.flatMap(section => section.places || []);

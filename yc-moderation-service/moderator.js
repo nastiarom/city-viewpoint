@@ -8,7 +8,7 @@ const MODEL_URI = `gpt://b1ggs733qid7s0v6nbai/yandexgpt-5.1/latest`;
 async function moderateContent(contentId, contentType, text) {
   const prompt = `
 Представь, что ты модератор сайта с отзывами пользователей о городах России.
-Твоя задача: проверять тексты на нежелательный контент: нецензурная лексика, оскорбления, разжигание ненависти, пропаганда насилия, спам, реклама, дезинформация.
+Твоя задача: проверять тексты на нежелательный контент: нецензурная лексика, оскорбления, разжигание ненависти, пропаганда насилия, спам, реклама, дезинформация. Это могут быть как отзывы, так и комментарии к ним.
 Возвращай строго JSON по схеме:
 
 {
@@ -43,13 +43,19 @@ const res = await axios.post(
 
 const jsonText = res.data.result.alternatives[0].message.text;
 
-const cleanedText = jsonText.trim().replace(/^```+/, '').replace(/```+$/, '').trim();
+const match = jsonText.match(/\{[\s\S]*\}/);
+const cleanedText = match ? match[0] : jsonText;
 
 try {
-  return JSON.parse(cleanedText);
+  const parsed = JSON.parse(cleanedText);
+  if (!parsed.moderationResult) throw new Error("Missing moderationResult");
+  return parsed;
 } catch (err) {
+  console.error("!!! ОШИБКА ПАРСИНГА JSON ОТ МОДЕЛИ !!!");
+  console.log("Сырой текст от модели:", jsonText);
   return { error: "Invalid JSON from model", raw: jsonText };
 }
+
 }
 
 module.exports = moderateContent;

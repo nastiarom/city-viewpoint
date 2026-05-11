@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "./ReviewMaker.css";
 import { FcLike } from "react-icons/fc";
 import { FaStar } from "react-icons/fa";
@@ -7,6 +7,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import test_photo from "/src/assets/kolomna.jpg"
 import { fetchCities } from '/src/store/citySlice';
 import { IoChevronBackOutline } from "react-icons/io5";
+import defaultCityImage from '/src/assets/city.png';
+import { YMaps, Map, Placemark } from '@pbe/react-yandex-maps';
 
 const TAGS = [
     "Природа",
@@ -56,76 +58,40 @@ const MAX_PHOTOS_PER_SECTION = 5;
 const MAX_CUSTOM_SECTIONS = 3;
 
 function YandexMap({ points, setPoints, center }) {
-    const mapRef = useRef(null);
-    const ymapsRef = useRef(null);
-    const placemarksRef = useRef([]);
-    const mapInstanceRef = useRef(null);
+    const mapCenter = Array.isArray(center) ? center : [center?.lat || 55.75, center?.lng || 37.61];
 
-    useEffect(() => {
-        const loadYMaps = () => {
-            if (!window.ymaps) {
-                const script = document.createElement("script");
-                script.src = "https://api-maps.yandex.ru/2.1/?lang=ru_RU";
-                script.onload = initMap;
-                document.head.appendChild(script);
-            } else {
-                initMap();
-            }
-        };
-
-        const initMap = () => {
-            window.ymaps.ready(() => {
-                ymapsRef.current = window.ymaps;
-                if (mapInstanceRef.current) {
-                    mapInstanceRef.current.destroy();
-                    mapInstanceRef.current = null;
-                }
-                const map = new ymapsRef.current.Map(mapRef.current, {
-                    center: [center.lat, center.lng],
-                    zoom: 10,
-                    controls: ["zoomControl", "typeSelector", "fullscreenControl"],
-                });
-
-                map.events.add("click", e => {
-                    const coords = e.get("coords");
-                    setPoints(prev => [...prev, coords]);
-                });
-
-                mapInstanceRef.current = map;
-            });
-        };
-
-        loadYMaps();
-
-        return () => {
-            if (mapInstanceRef.current) {
-                mapInstanceRef.current.destroy();
-                mapInstanceRef.current = null;
-            }
-        };
-    }, [center, setPoints]);
-
-    useEffect(() => {
-        if (!ymapsRef.current || !mapInstanceRef.current) return;
-        const map = mapInstanceRef.current;
-
-        placemarksRef.current.forEach(pm => map.geoObjects.remove(pm));
-        placemarksRef.current = [];
-
-        points.forEach(coords => {
-            const placemark = new ymapsRef.current.Placemark(coords, {}, { preset: "islands#greenDotIcon" });
-            map.geoObjects.add(placemark);
-            placemarksRef.current.push(placemark);
-        });
-    }, [points]);
+    const handleMapClick = (e) => {
+        const coords = e.get('coords');
+        console.log("Клик по карте, новые координаты:", coords);
+        setPoints((prev) => [...prev, coords]);
+    };
 
     return (
-        <div>
-            <h2>Отметьте точки на карте</h2>
-            <div
-                ref={mapRef}
-                style={{ width: "100%", height: "400px", borderRadius: "10px", marginBottom: "30px" }}
-            />
+        <div style={{ marginTop: '30px', width: '100%' }}>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '15px', color: '#3a6b00' }}>
+                Отметьте интересные места на карте
+            </h2>
+            <div style={{ width: '100%', height: '450px', borderRadius: '15px', overflow: 'hidden', border: '2px solid #a3c644' }}>
+                <YMaps query={{ lang: 'ru_RU' }}>
+                    <Map
+                        state={{ center: mapCenter, zoom: 12 }}
+                        width="100%"
+                        height="100%"
+                        onClick={handleMapClick}
+                        instanceRef={(ref) => {
+                            if (ref) ref.container.fitToViewport();
+                        }}
+                    >
+                        {points.map((coords, idx) => (
+                            <Placemark
+                                key={idx}
+                                geometry={coords}
+                                options={{ preset: 'islands#greenDotIcon' }}
+                            />
+                        ))}
+                    </Map>
+                </YMaps>
+            </div>
         </div>
     );
 }
@@ -237,20 +203,36 @@ export default function ReviewFormAdvanced() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const citiesFromRedux = useSelector((state) => state.cities.list);
+    const { id } = useParams();
+
     useEffect(() => {
         dispatch(fetchCities());
     }, [dispatch]);
     const [selectedCity, setSelectedCity] = useState(null);
+
     useEffect(() => {
         if (citiesFromRedux.length > 0 && !selectedCity) {
             setSelectedCity(citiesFromRedux[0]);
         }
     }, [citiesFromRedux, selectedCity]);
 
+    useEffect(() => {
+        if (id) {
+            setEditingDraftId(id);
+            fetchDraftData(id);
+        }
+    }, [id]);
+    useEffect(() => {
+        const handleClickOutside = () => setIsCityListOpen(false);
+        document.addEventListener("click", handleClickOutside);
+        return () => document.removeEventListener("click", handleClickOutside);
+    }, []);
+
     const [budget, setBudget] = useState("");
     const [isLocal, setIsLocal] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [notification, setNotification] = useState(null);
+    const [editingDraftId, setEditingDraftId] = useState(null);
     const [ratings, setRatings] = useState({
         Транспорт: 0,
         Чистота: 0,
@@ -264,6 +246,10 @@ export default function ReviewFormAdvanced() {
     const [selectedFeatures, setSelectedFeatures] = useState([]);
     const [selectedSeasons, setSelectedSeasons] = useState([]);
     const [tripType, setTripType] = useState(null);
+    const [citySearchTerm, setCitySearchTerm] = useState("");
+    const [isCityListOpen, setIsCityListOpen] = useState(false);
+    const [petInfo, setPetInfo] = useState("");
+
     const [texts, setTexts] = useState(() =>
         TEXT_SECTIONS.reduce((acc, s) => ({ ...acc, [s]: "" }), {})
     );
@@ -289,6 +275,13 @@ export default function ReviewFormAdvanced() {
         setTexts(prev => ({ ...prev, [section]: value }));
     };
     const [sectionPhotos, setSectionPhotos] = useState({});
+
+    const getDefaultImageFile = async () => {
+        const response = await fetch(defaultCityImage);
+        const blob = await response.blob();
+
+        return new File([blob], 'city.png', { type: 'image/png' });
+    };
 
     const handleSectionPhotoChange = (sectionTitle, e) => {
         const files = Array.from(e.target.files);
@@ -325,19 +318,83 @@ export default function ReviewFormAdvanced() {
     const removeCustomSection = index => {
         setCustomSections(prev => prev.filter((_, i) => i !== index));
     };
-
-    const saveDraft = () => {
-        alert("Черновик сохранён!");
-    };
-    const publishReview = async () => {
+    const fetchDraftData = async (draftId) => {
         try {
-            if (!selectedCity) return alert("Выберите город");
+            const response = await fetch(`http://localhost:8081/review/get?review_id=${draftId}`);
+            if (!response.ok) throw new Error("Не удалось загрузить черновик");
+
+            const data = await response.json();
+            const cityObj = citiesFromRedux.find(c => c.id === data.city_id);
+            if (cityObj) {
+                setSelectedCity(cityObj);
+            }
+
+            const loadedRatings = {
+                "Транспорт": data.transport_mark || 0,
+                "Чистота": data.cleanliness_mark || 0,
+                "Сохранность исторических сооружений": data.preservation_mark || 0,
+                "Безопасность": data.safety_mark || 0,
+                "Гостеприимство": data.hospitality_mark || 0,
+                "Соотношение цена/качество": data.price_quality_ratio || 0
+            };
+            setRatings(loadedRatings);
+
+            setSelectedTags(data.tags || []);
+
+            const features = [];
+            if (data.with_little_kids_flag) features.push("Поездка с младенцем");
+            if (data.with_pets_flag) features.push("Поездка с животными");
+            if (data.physically_challenged_flag) features.push("Путешественники с ограниченными возможностями");
+            if (data.limited_mobility_flag) features.push("Путешественники с ограниченной мобильностью");
+            if (data.elderly_people_flag) features.push("Пожилые путешественники");
+            if (data.special_diet_flag) features.push("Путешественники с особой диетой");
+            setSelectedFeatures(features);
+
+            setSelectedSeasons(data.season ? [data.season] : []);
+
+            setTripType(data.type || "Другое");
+            setBudget(data.budget || 0);
+
+            const loadedTexts = {};
+            const loadedCustomSections = [];
+
+            data.sections.forEach(section => {
+                if (TEXT_SECTIONS.includes(section.title)) {
+                    loadedTexts[section.title] = section.text;
+                    setPhotos(prev => ({
+                        ...prev,
+                        [section.title]: section.photos || []
+                    }));
+                } else {
+                    loadedCustomSections.push({
+                        title: section.title,
+                        content: section.text
+                    });
+                }
+            });
+            setTexts(loadedTexts);
+            setCustomSections(loadedCustomSections);
+
+            if (data.sections) {
+                const allPoints = data.sections.flatMap(s => s.places || []);
+                setMapPoints(allPoints);
+            }
+
+        } catch (err) {
+            console.error("Ошибка при заполнении формы черновика:", err);
+            alert("Не удалось загрузить данные черновика");
+        }
+    };
+
+    const saveDraft = async () => {
+        try {
+            if (!selectedCity) return alert("Выберите город для сохранения черновика");
 
             const token = localStorage.getItem('token');
             const formData = new FormData();
-
             const reviewData = {
                 city_id: Number(selectedCity.id),
+                is_draft: true,
                 season: selectedSeasons[0] || "",
                 budget: Number(budget) || 0,
                 tags: selectedTags,
@@ -353,21 +410,22 @@ export default function ReviewFormAdvanced() {
                 limited_mobility_flag: selectedFeatures.includes("Путешественники с ограниченной мобильностью"),
                 elderly_people_flag: selectedFeatures.includes("Пожилые путешественники"),
                 special_diet_flag: selectedFeatures.includes("Путешественники с особой диетой"),
-                pet: "",
+                pet: selectedFeatures.includes("Поездка с животными") ? petInfo : "",
                 type: tripType || "Другое",
                 main_photo: "",
                 sections: []
             };
 
+            let hasAnyPhoto = false;
             Object.keys(texts).forEach((title, sIdx) => {
                 const currentSectionPhotos = Array.from(photos[title] || []);
                 const photoNames = [];
 
                 currentSectionPhotos.forEach((file, pIdx) => {
                     if (file instanceof File) {
+                        hasAnyPhoto = true;
                         const uniqueName = `s${sIdx}_p${pIdx}_${file.name.replace(/\s+/g, '_')}`;
                         photoNames.push(uniqueName);
-
                         formData.append(`photo_${uniqueName}`, file);
 
                         if (!reviewData.main_photo) {
@@ -383,6 +441,123 @@ export default function ReviewFormAdvanced() {
                 });
             });
 
+            if (!hasAnyPhoto) {
+                const defaultFile = await getDefaultImageFile();
+                const defaultPhotoName = `default_draft_photo_${Date.now()}.png`;
+                formData.append(`photo_${defaultPhotoName}`, defaultFile);
+                reviewData.main_photo = defaultPhotoName;
+                if (reviewData.sections.length > 0) {
+                    reviewData.sections[0].photos.push(defaultPhotoName);
+                }
+            }
+
+            formData.append("review", JSON.stringify(reviewData));
+
+            const response = await fetch("http://localhost:8081/review/create", {
+                method: "POST",
+                body: formData,
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            if (!response.ok) throw new Error("Не удалось сохранить черновик в базу");
+            if (typeof editingDraftId !== 'undefined' && editingDraftId) {
+                await fetch(`http://localhost:8081/review/delete?review_id=${editingDraftId}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                console.log("Старая версия черновика удалена");
+            }
+
+            alert("Черновик успешно сохранен!");
+            navigate("/userProfile");
+
+        } catch (error) {
+            console.error("ОШИБКА ПРИ СОХРАНЕНИИ ЧЕРНОВИКА:", error);
+            alert(`Ошибка: ${error.message}`);
+        }
+    };
+
+
+    const publishReview = async () => {
+        try {
+            if (!selectedCity) return alert("Выберите город");
+
+            const token = localStorage.getItem('token');
+            const formData = new FormData();
+            const formattedPlaces = mapPoints.map((point, index) => ({
+                name: `Точка ${index + 1}`,
+                latitude: Number(point[0]),
+                longitude: Number(point[1])
+            }));
+            const reviewData = {
+                city_id: Number(selectedCity.id),
+                is_draft: false,
+                season: selectedSeasons[0] || "",
+                budget: Number(budget) || 0,
+                tags: selectedTags,
+                transport_mark: Number(ratings["Транспорт"]) || 0,
+                cleanliness_mark: Number(ratings["Чистота"]) || 0,
+                preservation_mark: Number(ratings["Сохранность исторических сооружений"]) || 0,
+                safety_mark: Number(ratings["Безопасность"]) || 0,
+                hospitality_mark: Number(ratings["Гостеприимство"]) || 0,
+                price_quality_ratio: Number(ratings["Соотношение цена/качество"]) || 0,
+                with_little_kids_flag: selectedFeatures.includes("Поездка с младенцем"),
+                with_pets_flag: selectedFeatures.includes("Поездка с животными"),
+                physically_challenged_flag: selectedFeatures.includes("Путешественники с ограниченными возможностями"),
+                limited_mobility_flag: selectedFeatures.includes("Путешественники с ограниченной мобильностью"),
+                elderly_people_flag: selectedFeatures.includes("Пожилые путешественники"),
+                special_diet_flag: selectedFeatures.includes("Путешественники с особой диетой"),
+                pet: selectedFeatures.includes("Поездка с животными") ? petInfo : "",
+                type: tripType || "Другое",
+                main_photo: "",
+                sections: []
+            };
+
+            let hasAnyPhoto = false;
+            Object.keys(texts).forEach((title, sIdx) => {
+                const currentSectionPhotos = Array.from(photos[title] || []);
+                const photoNames = [];
+
+                currentSectionPhotos.forEach((file, pIdx) => {
+                    if (file instanceof File) {
+                        hasAnyPhoto = true;
+                        const uniqueName = `s${sIdx}_p${pIdx}_${file.name.replace(/\s+/g, '_')}`;
+                        photoNames.push(uniqueName);
+                        formData.append(`photo_${uniqueName}`, file);
+
+                        if (!reviewData.main_photo) {
+                            reviewData.main_photo = uniqueName;
+                        }
+                    }
+                });
+
+                reviewData.sections.push({
+                    title: title,
+                    text: texts[title] || "",
+                    photos: photoNames,
+                    places: sIdx === 0 ? formattedPlaces : []
+                });
+            });
+
+            if (!hasAnyPhoto) {
+                console.log("Фото отсутствуют, добавляем заглушку из assets...");
+                const defaultFile = await getDefaultImageFile();
+                const defaultPhotoName = `default_city_photo_${Date.now()}.png`;
+                formData.append(`photo_${defaultPhotoName}`, defaultFile);
+                reviewData.main_photo = defaultPhotoName;
+
+                if (reviewData.sections.length > 0) {
+                    reviewData.sections[0].photos.push(defaultPhotoName);
+                } else {
+                    reviewData.sections.push({
+                        title: "Общее впечатление",
+                        text: Object.values(texts).join("\n\n") || "Без описания",
+                        photos: [defaultPhotoName],
+                        places: formattedPlaces
+                    });
+                }
+            }
+
             formData.append("review", JSON.stringify(reviewData));
 
             const beResponse = await fetch("http://localhost:8081/review/create", {
@@ -397,11 +572,11 @@ export default function ReviewFormAdvanced() {
             }
 
             const createdReview = await beResponse.json();
-
             const newReviewId = createdReview.id;
-            if (!newReviewId) throw new Error("Бэкенд не вернул ID отзыва");
-            const combinedText = Object.values(texts).join("\n\n");
 
+            if (!newReviewId) throw new Error("Бэкенд не вернул ID отзыва");
+
+            const combinedText = Object.values(texts).join("\n\n");
             const modResponse = await fetch("http://localhost:3000/moderate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -414,8 +589,13 @@ export default function ReviewFormAdvanced() {
 
             if (!modResponse.ok) {
                 console.warn("Микросервис модерации вернул ошибку, но отзыв уже сохранен в базе");
-            } else {
-                console.log("Модерация приняла запрос");
+            }
+
+            if (typeof editingDraftId !== 'undefined' && editingDraftId) {
+                await fetch(`http://localhost:8081/review/delete?review_id=${editingDraftId}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
             }
 
             setIsSubmitted(true);
@@ -468,29 +648,77 @@ export default function ReviewFormAdvanced() {
 
                 <h1>ОТЗЫВ</h1>
                 <p className="polite-message">Пожалуйста, будьте вежливы и уважительны <FcLike /></p>
-                <div className="city-select-wrapper">
-                    <label htmlFor="city-select" style={{ fontWeight: "700", fontSize: "2rem", color: "#3a6b00" }}>
+                <div
+                    className="city-select-wrapper"
+                    style={{ position: "relative" }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <label htmlFor="city-input" style={{ fontWeight: "700", fontSize: "2rem", color: "#3a6b00", display: "block", marginBottom: "10px" }}>
                         Укажите город:
                     </label>
-                    <select
-                        id="city-select"
-                        value={selectedCity?.name || ""}
-                        onChange={e => {
-                            const cityObj = citiesFromRedux.find(c => c.name === e.target.value);
-                            setSelectedCity(cityObj);
-                        }}
+
+                    <input
+                        id="city-input"
+                        type="text"
                         className="city-select-input"
-                    >
-                        {citiesFromRedux.length === 0 ? (
-                            <option>Загрузка городов...</option>
-                        ) : (
-                            citiesFromRedux.map(city => (
-                                <option key={city.id} value={city.name}>
-                                    {city.name} ({city.region})
-                                </option>
-                            ))
-                        )}
-                    </select>
+                        placeholder="Начните вводить город..."
+                        value={isCityListOpen ? citySearchTerm : (selectedCity?.name || citySearchTerm)}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            setCitySearchTerm(val);
+                            setIsCityListOpen(true);
+
+                            if (selectedCity) {
+                                setSelectedCity(null);
+                            }
+                        }}
+                        onFocus={() => setIsCityListOpen(true)}
+                        style={{ width: "100%", padding: "10px", fontSize: "1.5rem", borderRadius: "8px", border: "2px solid #a3c644" }}
+                    />
+                    {isCityListOpen && (
+                        <ul className="city-suggestions-list" style={{
+                            position: "absolute",
+                            top: "100%",
+                            left: 0,
+                            right: 0,
+                            backgroundColor: "white",
+                            border: "1px solid #ccc",
+                            borderRadius: "8px",
+                            zIndex: 1000,
+                            maxHeight: "200px",
+                            overflowY: "auto",
+                            listStyle: "none",
+                            padding: 0,
+                            margin: "5px 0 0 0",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                        }}>
+                            {citiesFromRedux
+                                .filter(city => {
+                                    if (!citySearchTerm) return true;
+                                    return city.name.toLowerCase().includes(citySearchTerm.toLowerCase());
+                                })
+                                .slice(0, 10)
+                                .map(city => (
+                                    <li
+                                        key={city.id}
+                                        onClick={() => {
+                                            setSelectedCity(city);
+                                            setCitySearchTerm(city.name);
+                                            setIsCityListOpen(false);
+                                        }}
+                                        style={{ padding: "10px 15px", cursor: "pointer", borderBottom: "1px solid #f0f0f0", fontSize: "1.2rem" }}
+                                        onMouseEnter={(e) => e.target.style.backgroundColor = "#f0f7e6"}
+                                        onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
+                                    >
+                                        {city.name} <span style={{ fontSize: "0.9rem", color: "#888" }}>({city.region})</span>
+                                    </li>
+                                ))
+                            }
+                            {citiesFromRedux.filter(city => city.name.toLowerCase().includes(citySearchTerm.toLowerCase())).length === 0 && (
+                                <li style={{ padding: "10px 15px", color: "#999" }}>Город не найден</li>
+                            )}
+                        </ul>
+                    )}
                 </div>
 
                 <h2>Оценка инфраструктуры:</h2>
@@ -528,6 +756,29 @@ export default function ReviewFormAdvanced() {
                         </ToggleButton>
                     ))}
                 </div>
+
+                {selectedFeatures.includes("Поездка с животными") && (
+                    <div style={{ marginTop: "15px", animation: "fadeIn 0.3s ease" }}>
+                        <label style={{ display: "block", marginBottom: "8px", fontWeight: "600", color: "#3a6b00" }}>
+                            Какое у вас животное? (необязательно):
+                        </label>
+                        <input
+                            type="text"
+                            value={petInfo}
+                            onChange={(e) => setPetInfo(e.target.value)}
+                            placeholder="Например: померанский шпиц"
+                            style={{
+                                width: "100%",
+                                maxWidth: "400px",
+                                padding: "10px",
+                                borderRadius: "8px",
+                                border: "2px solid #a3c644",
+                                outline: "none",
+                                fontSize: "1rem"
+                            }}
+                        />
+                    </div>
+                )}
 
                 <h2>Сезон поездки:</h2>
                 <div className="buttons-group">
@@ -649,7 +900,6 @@ export default function ReviewFormAdvanced() {
                         center={selectedCity.coordinates || [55.751244, 37.618423]}
                     />
                 )}
-
                 <div className="buttons-submit">
                     <button onClick={publishReview} className="btn-publish">Опубликовать</button>
                     <button onClick={saveDraft} className="btn-draft">Сохранить черновик</button>

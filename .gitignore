@@ -3,6 +3,6 @@ cityViewPointBack/
 node_modules/
 city-viewpoint/node_modules/
 yc-moderation-service/node_modules/
-
+city-viewpoint/.env
 *.log
 dist/

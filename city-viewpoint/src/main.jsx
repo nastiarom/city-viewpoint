@@ -31,7 +31,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/modAuth" element={<ModeratorAuthorization />} />
           <Route path="/modProfile" element={<ModerationProfile />} />
           <Route path="/userProfile" element={<UserProfile />} />
-          <Route path="/reviewForm" element={<ReviewForm />} />
+          <Route path="/reviewForm/:id?" element={<ReviewForm />} />
           <Route path="/terms" element={<UserAgreement />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/personal-data" element={<PersonalDataAgreement />} />

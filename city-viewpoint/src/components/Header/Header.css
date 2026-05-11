@@ -9,6 +9,7 @@ nav {
     border-bottom: 0.1rem solid rgb(129, 129, 129);
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
     min-height: 6rem;
+      z-index: 1000;
 }
 
 nav .logo {

@@ -4,7 +4,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import './ModeratorProfile.css'
 import { fetchUserProfile, logout } from '/src/store/authSlice';
 
-
 export default function ModerationProfile() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -329,7 +328,6 @@ export default function ModerationProfile() {
                     </button>
                   )}
                 </div>
-
               </div>
             );
           })

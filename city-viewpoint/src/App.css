@@ -20,6 +20,59 @@
   filter: brightness(130%);
 }
 
+.quick-dropdown {
+  position: absolute;
+  top: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 250px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  z-index: 2000;
+  overflow: hidden;
+}
+
+.dropdown-scroll-area {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.quick-dropdown div {
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 1.1rem;
+  color: #333;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.quick-dropdown div:hover {
+  background-color: #ffffff;
+  color: #a7bd70;
+}
+
+.dropdown-search-wrapper {
+  padding: 10px;
+  background: #f9f9f9;
+  border-bottom: 2px solid #a7bd70;
+}
+
+.dropdown-input {
+  width: 100%;
+  padding: 8px;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  outline: none;
+}
+
+.dropdown-input:focus {
+  border-color: #a7bd70;
+}
+
 .geo-confirmation-overlay {
   position: absolute;
   top: 70px;

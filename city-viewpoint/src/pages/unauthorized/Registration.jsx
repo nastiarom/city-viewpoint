@@ -172,8 +172,6 @@ function Registration() {
 
       if (data.verified === true) {
         await autoLogin();
-
-        alert("Почта подтверждена! Добро пожаловать.");
         navigate(`/userProfile`);
       } else {
         alert("Введен неверный код.");
@@ -193,7 +191,9 @@ function Registration() {
 
     startTimer();
   };
-
+  const goToAuthorization = () => {
+    navigate("/authorization");
+  };
   useEffect(() => {
     return () => {
       if (timerIdRef.current) {
@@ -253,32 +253,47 @@ function Registration() {
               autoComplete="new-password"
             />
             <div className="checkbox-group" style={{ marginBottom: "1rem", textAlign: "left" }}>
-              <label style={{ color: "white", fontSize: "1.1rem", display: "flex", alignItems: "center", marginBottom: "0.5rem", cursor: "pointer" }}>
+              <label style={{ color: "white", fontSize: "1.2rem", display: "flex", alignItems: "flex-start", marginBottom: "0.8rem", cursor: "pointer" }}>
                 <input
                   type="checkbox"
                   name="agreedToTerms"
                   checked={form.agreedToTerms}
                   onChange={handleChange}
                   required
-                  style={{ marginRight: "10px", width: "20px", height: "20px" }}
+                  style={{
+                    marginRight: "12px",
+                    width: "20px",
+                    height: "20px",
+                    flexShrink: 0,
+                    marginTop: "-3px"
+                  }}
                 />
                 <span>Я согласен с <Link to="/terms" style={{ color: "#a7bd70" }}>пользовательским соглашением</Link></span>
               </label>
 
-              <label style={{ color: "white", fontSize: "1.1rem", display: "flex", alignItems: "center", cursor: "pointer" }}>
+              <label style={{ color: "white", fontSize: "1.2rem", display: "flex", alignItems: "flex-start", cursor: "pointer" }}>
                 <input
                   type="checkbox"
                   name="agreedToData"
                   checked={form.agreedToData}
                   onChange={handleChange}
                   required
-                  style={{ marginRight: "10px", width: "20px", height: "20px" }}
+                  style={{
+                    marginRight: "12px",
+                    width: "20px",
+                    height: "20px",
+                    flexShrink: 0,
+                    marginTop: "-3px"
+                  }}
                 />
                 <span>Даю согласие на <Link to="/personal-data" style={{ color: "#a7bd70" }}>обработку персональных данных</Link></span>
               </label>
             </div>
+
             <div style={{ display: "flex" }}>
-              <button style={{ background: "#9c9b9bab", marginRight: "20px", width: "170px" }}>
+              <button
+                style={{ background: "#9c9b9bab", marginRight: "20px", width: "170px" }}
+                onClick={goToAuthorization}>
                 Вход
               </button>
               <button type="submit" style={{ width: "170px" }}>

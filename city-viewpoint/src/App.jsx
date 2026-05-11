@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchCities } from './store/citySlice';
 import { useNavigate } from 'react-router-dom';
 import { YMaps } from '@pbe/react-yandex-maps';
+import { MarginTwoTone } from '@mui/icons-material';
 
 const items = [
   { text: 'Города', color: '#44a7e9ff' },
@@ -24,6 +25,11 @@ function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const cities = useSelector((state) => state.cities.list);
+  const regions = [...new Set(cities.map(c => c.region))].filter(Boolean).sort();
+
+  const SEASONS = ['Зима', 'Весна', 'Лето', 'Осень'];
+  const TRIP_TYPES = ["Активная", "Паломническая", "Семейная", "Деловая", "Оздоровительная", "Культурная", "Молодежная", "Романтическая"];
+  const RATINGS = [3, 4, 4.5, 5];
 
   const [isCityModalOpen, setCityModalOpen] = useState(false);
   const [showGeoConfirmation, setShowGeoConfirmation] = useState(false);
@@ -31,6 +37,25 @@ function App() {
   const [popularReviews, setPopularReviews] = useState([]);
   const [isChangeLocationOpen, setChangeLocationOpen] = useState(false);
   const [isSearchModalOpen, setSearchModalOpen] = useState(false);
+  const [activeMenu, setActiveMenu] = useState(null);
+  const [selectedRegion, setSelectedRegion] = useState('');
+
+
+  const handleItemClick = (text) => {
+    if (text === 'Города') {
+      setSearchModalOpen(true);
+      setActiveMenu(null);
+    } else {
+      setActiveMenu(activeMenu === text ? null : text);
+    }
+  };
+
+  const applyQuickFilter = (type, value) => {
+    setActiveMenu(null);
+    setSelectedRegion('');
+    navigate('/reviewsList', { state: { quickFilter: { type, value } } });
+  };
+
 
   const fetchPopularGeneral = async () => {
     try {
@@ -90,11 +115,24 @@ function App() {
     }
   }, []);
 
-  const detectLocation = () => {
+  const detectLocation = async () => {
     const token = import.meta.env.VITE_DADATA_TOKEN;
-    const callbackName = "dadataCallback_" + Math.floor(Math.random() * 100000);
+    const url = "https://dadata.ru";
 
-    window[callbackName] = (result) => {
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": "Token " + token
+        }
+      });
+
+      if (!response.ok) throw new Error("Ошибка DaData API");
+      const result = await response.json();
+
       if (result && result.location && result.location.data) {
         const data = result.location.data;
         const cityName = data.city || data.settlement || data.region || "Москва";
@@ -105,30 +143,22 @@ function App() {
           latitude: parseFloat(data.geo_lat),
           longitude: parseFloat(data.geo_lon)
         };
+
         setDetectedCity(cityData);
         setShowGeoConfirmation(true);
+      } else {
+        throw new Error("Местоположение не определено");
       }
-      delete window[callbackName];
-    };
-
-    const script = document.createElement("script");
-    script.src = `https://dadata.ru{token}&callback=${callbackName}`;
-    document.head.appendChild(script);
-
-    setTimeout(() => {
-      if (!localStorage.getItem('userCity') && !detectedCity) {
+    } catch (error) {
+      console.error("Ошибка геопозиционирования:", error);
+      if (!localStorage.getItem('userCity')) {
         const defaultCity = { name: 'Москва', id: 1, latitude: 55.7558, longitude: 37.6173 };
         setDetectedCity(defaultCity);
         setShowGeoConfirmation(true);
       }
-    }, 3000);
-  };
-
-  const handleItemClick = (text) => {
-    if (text === 'Города') {
-      setSearchModalOpen(true);
     }
   };
+
 
   const confirmCity = () => {
     localStorage.setItem('userCity', JSON.stringify(detectedCity));
@@ -177,31 +207,53 @@ function App() {
           </div>
         )}
 
-        <Grid
-          container
-          spacing={4}
-          justifyContent="center"
-          alignItems="center"
-          style={{ minHeight: '130px', backgroundColor: 'white' }}
-        >
+        <Grid container spacing={4} justifyContent="center" style={{ marginTop: '3rem', backgroundColor: 'white' }}>
           {items.map(({ text, color }, index) => (
-            <Grid
-              item
-              xs={6}
-              sm={3}
-              key={index}
-            >
+            <Grid item xs={6} sm={3} key={index} style={{ position: 'relative' }}>
               <div
                 className='item-box'
-                style={{ backgroundColor: color, cursor: 'pointer' }}
+                style={{ backgroundColor: color, cursor: 'pointer', fontSize: '1.7rem' }}
                 onClick={() => handleItemClick(text)}
               >
                 {text}
               </div>
+              {activeMenu === text && text !== 'Города' && (
+                <div className="quick-dropdown">
+                  {text === 'Регионы' && (
+                    <div className="dropdown-search-wrapper">
+                      <input
+                        type="text"
+                        placeholder="Поиск региона..."
+                        autoFocus
+                        value={selectedRegion}
+                        onChange={(e) => setSelectedRegion(e.target.value)}
+                        className="dropdown-input"
+                      />
+                      <div className="dropdown-scroll-area">
+                        {regions
+                          .filter(r => r.toLowerCase().includes(selectedRegion.toLowerCase()))
+                          .map(r => (
+                            <div key={r} onClick={() => applyQuickFilter('region', r)}>{r}</div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="dropdown-scroll-area">
+                    {text === 'Вид отдыха' && TRIP_TYPES.map(t => (
+                      <div key={t} onClick={() => applyQuickFilter('trip_type', t)}>{t}</div>
+                    ))}
+                    {text === 'Сезон' && SEASONS.map(s => (
+                      <div key={s} onClick={() => applyQuickFilter('season', s)}>{s}</div>
+                    ))}
+                    {text === 'Рейтинг города' && RATINGS.map(rate => (
+                      <div key={rate} onClick={() => applyQuickFilter('rating', rate)}>{rate}★ и выше</div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </Grid>
           ))}
         </Grid>
-
         <PopularCities />
         <CardSlider reviewsData={popularReviews} />
         <Footer />

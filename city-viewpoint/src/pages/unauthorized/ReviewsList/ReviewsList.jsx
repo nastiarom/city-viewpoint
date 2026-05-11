@@ -6,8 +6,7 @@ import { FaStar } from 'react-icons/fa';
 import { FcLike } from "react-icons/fc";
 import BudgetSlider from './BudgetSlider';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchReviewsByCity } from '/src/store/citySlice';
-import { fetchFilteredReviews } from '/src/store/citySlice';
+import { fetchReviewsByCity, fetchFilteredReviews, fetchReviewsByRegion } from '/src/store/citySlice';
 import './ReviewsList.css'
 
 function useQuery() {
@@ -40,12 +39,14 @@ function ReviewsList() {
   const cityObj = useMemo(() => {
     return allCities.find(c => String(c.id) === String(cityId));
   }, [allCities, cityId]);
+  const location = useLocation();
 
   useEffect(() => {
-    if (cityId) {
+    if (cityId && !location.state?.quickFilter) {
       dispatch(fetchReviewsByCity(cityId));
     }
-  }, [cityId, dispatch]);
+  }, [cityId, dispatch, location.state]);
+
 
   const [budgetRange, setBudgetRange] = useState([0, 1000000]);
   const [selectedSeasons, setSelectedSeasons] = useState([]);
@@ -82,6 +83,33 @@ function ReviewsList() {
     }
   };
 
+  useEffect(() => {
+    if (location.state?.quickFilter) {
+      const { type, value } = location.state.quickFilter;
+
+      if (type === 'region') {
+        setSelectedRegion(value);
+        console.log("Отправка запроса ПО РЕГИОНУ:", value);
+        dispatch(fetchReviewsByRegion(value));
+      } else {
+        if (type === 'season') setSelectedSeasons([value]);
+        if (type === 'trip_type') setSelectedTypes([value]);
+        if (type === 'rating') setSelectedRating(value);
+
+        const fastFilter = {
+          city_id: null,
+          season: type === 'season' ? value : null,
+          trip_type: type === 'trip_type' ? value : null,
+          tags: null,
+          budget: null,
+          rating: type === 'rating' ? { min: Number(value), max: 5.0 } : null,
+          key_words: null
+        };
+        dispatch(fetchFilteredReviews(fastFilter));
+      }
+    }
+  }, [location.state, dispatch]);
+
   const handleSearch = (searchAll = false) => {
     const isDefaultBudget = budgetRange[0] === 0 && budgetRange[1] === 1000000;
     const budgetFilter = isDefaultBudget ? null : {
@@ -113,7 +141,6 @@ function ReviewsList() {
     console.log("Отправка фильтров:", filterRequest);
     dispatch(fetchFilteredReviews(filterRequest));
   };
-
 
   const seasonColors = {
     Зима: { background: '#6ca0dc', color: 'white' },
@@ -424,61 +451,62 @@ function ReviewsList() {
                 <p style={{ fontSize: '1.4rem' }}>Общий рейтинг: {cityObj.rating}</p>
               </div>
               <p style={{ fontSize: '1.5rem', color: '#555' }}>{cityObj.region}</p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '1rem' }}>
-                {reviewsToDisplay.length ? reviewsToDisplay.map(review => {
-                  const snippet = review.text_start || '';
-
-                  return (
-                    <Link
-                      key={review.id}
-                      to={`/review/${review.id}`}
-                      style={{
-                        display: 'flex',
-                        width: '100%',
-                        border: '1px solid #ccc',
-                        borderRadius: '8px',
-                        textDecoration: 'none',
-                        color: 'inherit',
-                        overflow: 'hidden',
-                        marginBottom: '15px'
-                      }}
-                    >
-                      <img
-                        src={`${SERVER_URL}${review.main_photo}`}
-                        alt="Фото отзыва"
-                        style={{ width: '180px', height: '180px', objectFit: 'cover' }}
-                      />
-                      <div style={{ padding: '15px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ fontWeight: 'bold', fontSize: '2rem' }}>{review.city}</div>
-                            <div style={{ fontSize: '1.5rem', color: '#a7bd70', fontWeight: 'bolder' }}>  <FaStar style={{ color: '#f5ce0bff', fontSize: '2rem' }} /> {Number(review.review_mark).toFixed(2)}</div>
-                          </div>
-
-                          <div style={{ fontSize: '1.5rem', color: '#666', marginTop: '0.5%' }}>
-                            {new Date(review.creation_date).toLocaleDateString()}
-                          </div>
-
-                          <p style={{ marginTop: '10px', fontSize: '1.3rem', color: '#333' }}>
-                            {snippet}... <span style={{ color: '#4b91d6', fontSize: '1rem' }}>читать далее</span>
-                          </p>
-                        </div>
-
-                        <div style={{ alignSelf: 'flex-end', fontWeight: 'bold', fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <FcLike style={{ fontSize: '1.4rem' }} /> {review.likes_number || 0}
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                }) : (
-                  <p style={{ fontSize: '1.5rem', color: '#999' }}>Отзывов пока нет</p>
-                )}
-              </div>
             </>
           ) : (
-            <h1>Город не выбран или не найден</h1>
+            <h1 style={{ fontSize: '3rem', fontWeight: 'lighter', marginBottom: '1.5rem' }}>
+              РЕЗУЛЬТАТЫ ПОИСКА ПО РОССИИ
+            </h1>
           )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '1rem' }}>
+            {reviewsToDisplay.length ? (
+              reviewsToDisplay.map(review => {
+                const snippet = review.text_start || '';
+                return (
+                  <Link
+                    key={review.id}
+                    to={`/review/${review.id}`}
+                    style={{
+                      display: 'flex',
+                      width: '100%',
+                      border: '1px solid #ccc',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      color: 'inherit',
+                      overflow: 'hidden',
+                      marginBottom: '15px'
+                    }}
+                  >
+                    <img
+                      src={`${SERVER_URL}${review.main_photo}`}
+                      alt="Фото отзыва"
+                      style={{ width: '180px', height: '180px', objectFit: 'cover' }}
+                    />
+                    <div style={{ padding: '15px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ fontWeight: 'bold', fontSize: '2rem' }}>{review.city}</div>
+                          <div style={{ fontSize: '1.5rem', color: '#a7bd70', fontWeight: 'bolder' }}>
+                            <FaStar style={{ color: '#f5ce0bff', fontSize: '2rem' }} /> {Number(review.review_mark).toFixed(2)}
+                          </div>
+                        </div>
+                        <div style={{ fontSize: '1.5rem', color: '#666', marginTop: '0.5%' }}>
+                          {new Date(review.creation_date).toLocaleDateString()}
+                        </div>
+                        <p style={{ marginTop: '10px', fontSize: '1.3rem', color: '#333' }}>
+                          {snippet}... <span style={{ color: '#4b91d6', fontSize: '1rem' }}>читать далее</span>
+                        </p>
+                      </div>
+                      <div style={{ alignSelf: 'flex-end', fontWeight: 'bold', fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <FcLike style={{ fontSize: '1.4rem' }} /> {review.likes_number || 0}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })
+            ) : (
+              <p style={{ fontSize: '1.5rem', color: '#999' }}>Отзывов пока нет</p>
+            )}
+          </div>
         </main>
       </div>
       <Footer />
