@@ -120,8 +120,6 @@ function MyReviewsPanel({ onClose }) {
             });
 
             if (!response.ok) throw new Error("Не удалось отправить запрос");
-
-            alert("Запрос на перепроверку отправлен!");
             dispatch(fetchMyReviews());
         } catch (err) {
             alert(err.message);
@@ -340,7 +338,6 @@ function UserProfile() {
 
             if (!response.ok) throw new Error("Ошибка обновления");
 
-            alert("Сохранено!");
             dispatch(fetchUserProfile());
         } catch (error) {
             alert(error.message);
@@ -376,8 +373,6 @@ function UserProfile() {
                 const errorData = await response.json();
                 throw new Error(errorData.message || "Не удалось обновить пароль. Возможно, старый пароль неверен.");
             }
-
-            alert("Пароль успешно изменен!");
             setShowPasswordForm(false);
             setPasswords({ oldPass: "", newPass: "", confirmPass: "" });
         } catch (error) {
@@ -409,8 +404,6 @@ function UserProfile() {
                 const errorData = await response.json();
                 throw new Error(errorData.message || "Ошибка при загрузке фото");
             }
-
-            alert("Фото успешно обновлено!");
             dispatch(fetchUserProfile());
 
         } catch (err) {

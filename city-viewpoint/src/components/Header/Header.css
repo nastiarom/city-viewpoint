@@ -87,11 +87,14 @@ nav .menu span {
     nav {
         flex-direction: row;
         flex-wrap: wrap;
-        padding: 0.5rem 1rem;
+        padding: 0rem 1rem;
         height: auto;
         min-height: 5rem;
         justify-content: space-between;
-        position: relative;
+        position: fixed;
+        top: 0;
+        margin-top: 0;
+        width: 100%;
     }
 
     .nav-left {

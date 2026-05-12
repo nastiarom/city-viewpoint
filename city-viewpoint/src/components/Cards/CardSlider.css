@@ -6,13 +6,15 @@
   padding: 2rem;
   box-sizing: border-box;
   margin: 100px;
+   width: 100%;
+  
 }
 
 .slider-container {
   position: relative;
   width: 100%;
   max-width: 1000px;
-  overflow: visible;
+  overflow: visible; 
 }
 
 .card-slider {
@@ -147,9 +149,10 @@
   }
 
   .slider-wrapper {
-    margin: 40px 10px;
+    margin: 20px 0px;
     padding: 0.5rem;
     height: auto;
+    width: 100vw
   }
 
   .card-slider {
@@ -187,6 +190,10 @@
   .item-box {
     font-size: 1.2rem !important;
     height: 80px !important;
+  }
+    body, html {
+    overflow-x: hidden;
+    position: relative;
   }
 }
 

@@ -111,3 +111,39 @@
   font-size: 1.5rem;
   margin-bottom: 1.5rem;
 }
+
+@media (max-width: 800px) {
+  main {
+    padding-top: 80px !important;
+    margin-top: 0 !important;
+  }
+
+  .review-top-row {
+    gap: 1rem;
+    font-size: 1.2rem;
+    flex-wrap: wrap;
+  }
+
+  .review-city-block h2 {
+    font-size: 24px;
+  }
+
+  .review-tag, .season-circle {
+    font-size: 1.2rem;
+    padding: 0.3rem 0.6rem;
+  }
+  .review-tag{
+    margin-top: 1rem;
+  }
+
+  .user-photo-circle {
+    width: 40px;
+    height: 40px;
+  }
+  .review-ratings{
+    font-size: 1.1rem;
+  }
+  .review-trip-info strong {
+    font-size: 1.2rem;
+  }
+}

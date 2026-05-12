@@ -473,7 +473,17 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
+  .review-maker-back-btn, .btn-back {
+    display: flex !important;
+    margin: 20px auto 10px !important; 
+    justify-content: center;
+    width: fit-content;
+    font-size: 1rem !important;
+    padding: 8px 16px !important;
+    border: 1px solid #ddd !important;
+  }
+
   .rating-label {
     flex: 0 0 140px;
     font-size: 1.1rem;
@@ -501,6 +511,94 @@
   .text-area {
     font-size: 1.1rem;
     min-height: 110px;
+  }
+
+  .review-form-container {
+    padding: 15px !important;
+    margin: 10px auto !important;
+    width: 95%;
+  }
+
+  .review-form-container h1 {
+    font-size: 1.8rem !important;
+  }
+  
+  .review-form-container h2, 
+  .review-form-container h3 {
+    font-size: 1.4rem !important;
+  }
+
+  .rating-row {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 10px;
+  }
+
+  .rating-label {
+    flex: none !important;
+    font-size: 1.3rem !important;
+    width: 100%;
+  }
+
+  .star {
+    font-size: 2.7rem !important;
+  }
+
+  .photo-upload-button {
+    padding: 8px 15px !important;
+    font-size: 0.9rem !important;
+    border-radius: 20px !important;
+  }
+
+  .photo-uploader-wrapper {
+    gap: 8px !important;
+    font-size: 0.9rem !important;
+  }
+
+  .photo-upload-text {
+    min-width: 100px !important;
+    font-size: 0.85rem !important;
+  }
+
+  .buttons-submit {
+    flex-direction: column;
+    gap: 12px !important;
+  }
+
+  .btn-publish, .btn-draft {
+    width: 100% !important;
+    min-width: unset !important;
+    padding: 12px !important;
+    font-size: 1.1rem !important;
+  }
+
+  .city-select-wrapper select {
+    width: 100% !important;
+    font-size: 1rem !important;
+  }
+    .budget-row {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 15px !important;
+  }
+
+  .budget-row label:first-of-type {
+    margin-right: 0 !important;
+    font-size: 1.1rem !important;
+  }
+
+  .budget-row input[type="number"] {
+    width: 100% !important;
+    max-width: 200px !important;
+    margin-top: 5px !important;
+  }
+
+  .budget-row label:last-of-type {
+    margin-left: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    font-size: 1.1rem !important;
   }
 }
 

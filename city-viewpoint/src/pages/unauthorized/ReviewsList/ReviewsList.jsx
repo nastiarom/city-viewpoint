@@ -4,9 +4,11 @@ import ReviewsListHeader from './ReviewsListHeader';
 import Footer from '/src/components/Footer/Footer';
 import { FaStar } from 'react-icons/fa';
 import { FcLike } from "react-icons/fc";
+import { FaFilter } from "react-icons/fa";
+
 import BudgetSlider from './BudgetSlider';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchReviewsByCity, fetchFilteredReviews, fetchReviewsByRegion } from '/src/store/citySlice';
+import { fetchReviewsByCity, fetchFilteredReviews, fetchReviewsByRegion, fetchCityDetails } from '/src/store/citySlice';
 import './ReviewsList.css'
 
 function useQuery() {
@@ -28,6 +30,7 @@ function ReviewsList() {
   const query = useQuery();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const cityId = query.get('id');
   const SERVER_URL = "http://localhost:8081/static/";
@@ -35,6 +38,7 @@ function ReviewsList() {
   const allCities = useSelector((state) => state.cities.list);
   const cityReviews = useSelector((state) => state.cities.reviews);
   const isLoading = useSelector((state) => state.cities.reviewsLoading);
+  const cityDetails = useSelector((state) => state.cities.currentCityDetails);
 
   const cityObj = useMemo(() => {
     return allCities.find(c => String(c.id) === String(cityId));
@@ -44,6 +48,7 @@ function ReviewsList() {
   useEffect(() => {
     if (cityId && !location.state?.quickFilter) {
       dispatch(fetchReviewsByCity(cityId));
+      dispatch(fetchCityDetails(cityId));
     }
   }, [cityId, dispatch, location.state]);
 
@@ -56,7 +61,7 @@ function ReviewsList() {
   const [selectedRegion, setSelectedRegion] = useState('');
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [keyWords, setKeyWords] = useState('');
-
+  
   const [flags, setFlags] = useState({
     with_little_kids: false,
     with_pets: false,
@@ -154,11 +159,22 @@ function ReviewsList() {
   if (isLoading) return <div>Загрузка отзывов...</div>;
 
   return (
-    <div style={{ backgroundColor: 'white', backgroundImage: 'none' }}>
+    <div className="reviews-page-wrapper" style={{ backgroundColor: 'white', backgroundImage: 'none' }}>
       <ReviewsListHeader />
-      <div style={{ display: 'flex', gap: '20px', marginTop: '1.5%', minHeight: '70vh', marginLeft: '5%', marginRight: '5%' }}>
-        <aside style={{ flexBasis: '350px', border: '1px solid #ccc', borderRadius: '8px', padding: '1rem', height: 'fit-content', position: 'sticky', top: '1rem' }}>
-          <h2 style={{ fontSize: '2rem', marginBottom: '1rem', fontWeight: 'lighter' }}>Фильтры</h2>
+        <button 
+    className="mobile-filter-btn" 
+    onClick={() => setIsFilterOpen(true)}
+  >
+    <FaFilter /> Фильтры {selectedTags.length + selectedSeasons.length > 0 && `(${selectedTags.length + selectedSeasons.length})`}
+  </button>
+      <div className="content-layout" >
+       <aside className={`filters-aside ${isFilterOpen ? 'open' : ''}`}>
+      <div className="filters-header-mobile">
+        <h2 style={{fontSize: '1.8rem'}}>Фильтры</h2>
+        <button className="close-filters" onClick={() => setIsFilterOpen(false)}>×</button>
+      </div>
+
+      <h2 className="desktop-filters-title" style={{ fontSize: '2rem', marginBottom: '1rem', fontWeight: 'lighter' }}>Фильтры</h2>
           <div style={{ marginBottom: '1.5rem' }}>
             <label><b style={{ fontSize: '1.4rem' }}>Поиск в тексте:</b></label>
             <input
@@ -440,15 +456,14 @@ function ReviewsList() {
               Поиск по всем городам
             </button>
           </div>
-
         </aside>
-        <main style={{ flex: 1 }}>
+        <main className="reviews-main" style={{ flex: 1 }}>
           {cityObj ? (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <h1 style={{ fontSize: '4rem', fontWeight: 'lighter' }}>{cityObj.name.toUpperCase()}</h1>
+              <div className='city-name' style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h1 style={{ fontSize: '4rem', fontWeight: 'lighter' }} >{cityObj.name.toUpperCase()}</h1>
                 <FaStar style={{ color: '#f5ce0bff', fontSize: '2.7rem', marginLeft: '1%' }} />
-                <p style={{ fontSize: '1.4rem' }}>Общий рейтинг: {cityObj.rating}</p>
+                <p style={{ fontSize: '1.4rem' }}>Общий рейтинг: {cityDetails?.mark ? cityDetails.mark.toFixed(2) : "0.00"}</p>
               </div>
               <p style={{ fontSize: '1.5rem', color: '#555' }}>{cityObj.region}</p>
             </>
@@ -510,6 +525,7 @@ function ReviewsList() {
         </main>
       </div>
       <Footer />
+       {isFilterOpen && <div className="overlay" onClick={() => setIsFilterOpen(false)} />}
     </div>
   );
 }

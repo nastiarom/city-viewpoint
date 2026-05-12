@@ -23,6 +23,20 @@ export const fetchReviewsByCity = createAsyncThunk(
     return await response.json();
   }
 );
+
+export const fetchCityDetails = createAsyncThunk(
+  'cities/fetchCityDetails',
+  async (cityId, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`http://localhost:8081/city?city_id=${cityId}`);
+      if (!response.ok) throw new Error('Ошибка при получении данных города');
+      return await response.json();
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 export const createReview = createAsyncThunk(
   'cities/createReview',
   async (reviewData) => {
@@ -230,6 +244,9 @@ const citySlice = createSlice({
       .addCase(fetchReviewsByRegion.rejected, (state, action) => {
         state.reviewsLoading = false;
         state.error = action.payload;
+      })
+      .addCase(fetchCityDetails.fulfilled, (state, action) => {
+        state.currentCityDetails = action.payload;
       });
   },
 });

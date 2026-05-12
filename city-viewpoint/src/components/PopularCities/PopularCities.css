@@ -46,10 +46,27 @@
   text-align: center;
 }
 
-
 @media (max-width: 600px) {
+  .popular-cities {
+    max-width: 90%;
+    margin: 1.5rem auto;
+  }
+
+  .title {
+    font-size: 1.6rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    margin-top: 3rem;
+  }
+
   .cities-list {
     grid-template-columns: repeat(3, 1fr);
+    gap: 5px 1px;
+  }
+
+  .city-item {
+    font-size: 1.5rem;
+    grid-auto-rows: 30px;
   }
 }
 
@@ -58,3 +75,4 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+

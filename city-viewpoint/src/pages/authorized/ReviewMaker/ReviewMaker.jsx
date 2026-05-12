@@ -56,13 +56,13 @@ const TEXT_SECTIONS = ["Общее", "Еда", "Проживание", "Дост
 
 const MAX_PHOTOS_PER_SECTION = 5;
 const MAX_CUSTOM_SECTIONS = 3;
-
 function YandexMap({ points, setPoints, center }) {
-    const mapCenter = Array.isArray(center) ? center : [center?.lat || 55.75, center?.lng || 37.61];
+    const mapCenter = Array.isArray(center)
+        ? center
+        : [center?.lat || center?.latitude || 55.75, center?.lng || center?.longitude || 37.61];
 
     const handleMapClick = (e) => {
         const coords = e.get('coords');
-        console.log("Клик по карте, новые координаты:", coords);
         setPoints((prev) => [...prev, coords]);
     };
 
@@ -74,12 +74,15 @@ function YandexMap({ points, setPoints, center }) {
             <div style={{ width: '100%', height: '450px', borderRadius: '15px', overflow: 'hidden', border: '2px solid #a3c644' }}>
                 <YMaps query={{ lang: 'ru_RU' }}>
                     <Map
+                        key={`${mapCenter[0]}-${mapCenter[1]}`}
                         state={{ center: mapCenter, zoom: 12 }}
                         width="100%"
                         height="100%"
                         onClick={handleMapClick}
                         instanceRef={(ref) => {
-                            if (ref) ref.container.fitToViewport();
+                            if (ref) {
+                                ref.container.fitToViewport();
+                            }
                         }}
                     >
                         {points.map((coords, idx) => (
@@ -808,7 +811,7 @@ export default function ReviewFormAdvanced() {
                     ))}
                 </div>
 
-                <div className="budget-local-wrapper" style={{ marginTop: 20, marginBottom: 30 }}>
+                <div className="budget-local-wrapper budget-row" style={{ marginTop: 20, marginBottom: 30 }}>
                     <label htmlFor="budget-input" style={{ fontWeight: "700", fontSize: "1.3rem", color: "#3a6b00", marginRight: 12 }}>
                         Бюджет поездки (примерно, ₽):
                     </label>
@@ -895,9 +898,9 @@ export default function ReviewFormAdvanced() {
                 )}
                 {selectedCity && (
                     <YandexMap
+                        center={[selectedCity.latitude, selectedCity.longitude]}
                         points={mapPoints}
                         setPoints={setMapPoints}
-                        center={selectedCity.coordinates || [55.751244, 37.618423]}
                     />
                 )}
                 <div className="buttons-submit">
