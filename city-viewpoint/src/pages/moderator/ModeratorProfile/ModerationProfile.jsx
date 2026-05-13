@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from 'react-redux';
 import './ModeratorProfile.css'
 import { fetchUserProfile, logout } from '/src/store/authSlice';
+import { fetchCities } from '/src/store/citySlice';
 
 export default function ModerationProfile() {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ export default function ModerationProfile() {
   });
 
   const { user, loading } = useSelector((state) => state.auth);
+  const allCities = useSelector((state) => state.cities?.list || []);
   const userRole = user?.role;
   const SERVER_URL = "http://localhost:8081/static/";
 
@@ -63,7 +65,37 @@ export default function ModerationProfile() {
       }
 
       const data = await response.json();
-      setDataList(Array.isArray(data) ? data : []);
+      const rawList = Array.isArray(data) ? data : [];
+
+      if (activeTab === "complaints" && rawList.length > 0) {
+        const enrichedList = await Promise.all(
+          rawList.map(async (item) => {
+            const rId = item.id || item.review_id;
+            try {
+              const res = await fetch(`http://localhost:8081/review/get?review_id=${rId}`);
+              if (res.ok) {
+                const fullReview = await res.json();
+                const cityFromRedux = allCities.find(c => Number(c.id) === Number(fullReview.city_id));
+
+                return {
+                  ...item,
+                  city: cityFromRedux ? cityFromRedux.name : "Неизвестный город",
+                  review_mark: fullReview.review_mark || 0.0,
+                  main_photo: fullReview.main_photo,
+                  creation_date: fullReview.creation_date
+                };
+              }
+            } catch (e) {
+              console.error(e);
+            }
+            return item;
+          })
+        );
+        setDataList(enrichedList);
+      } else {
+        setDataList(rawList);
+      }
+
     } catch (err) {
       showNotification(err.message, "error");
       setDataList([]);
@@ -73,6 +105,9 @@ export default function ModerationProfile() {
   };
 
   useEffect(() => {
+    if (allCities.length === 0) {
+      dispatch(fetchCities());
+    }
     fetchData();
     setExpandedIds({});
   }, [activeTab]);
