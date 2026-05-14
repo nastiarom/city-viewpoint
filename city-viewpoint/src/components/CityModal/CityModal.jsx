@@ -1,4 +1,3 @@
-import React from 'react';
 import './CityModal.css';
 
 function CityModal({ children, onClose }) {

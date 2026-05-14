@@ -1,262 +1,22 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import "./UserProfile.css";
+import { useEffect, useRef, useState } from "react";
 import { FcLike } from "react-icons/fc";
-import { MdDraw } from "react-icons/md";
+import { MdDraw, MdOutlineRateReview } from "react-icons/md";
 import { RiDraftLine } from "react-icons/ri";
-import { fetchCities, fetchLikedReviews, fetchMyReviews, fetchDrafts } from '/src/store/citySlice';
-import reviews from "/src/data/reviews.js";
-import reviewTexts from "/src/data/reviews_text.js";
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchUserProfile, logout } from '/src/store/authSlice';
-import CitySearch from '/src/components/CitySearch/CitySearch'
-import { MdOutlineRateReview } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
+import DraftsPanel from "./ProfileComponents/DraftsPanel";
+import FavoritesPanel from "./ProfileComponents/FavouritesPanel";
+import MyReviewsPanel from "./ProfileComponents/MyReviewsPanel";
+import getStatusStyles from "./ProfileComponents/StatusStyles";
+import "./UserProfile.css";
 import defaultAvatar from "/src/assets/avatar.png";
-import { Link } from 'react-router-dom';
+import { API_AUTH_URL } from '/src/config';
+import { fetchUserProfile, logout } from '/src/store/authSlice';
+import { fetchCities } from '/src/store/citySlice';
 
 function truncateText(text, maxLength = 200) {
     if (!text) return "";
     return text.length > maxLength ? text.slice(0, maxLength) + "…" : text;
-}
-
-function FavoritesPanel({ onClose }) {
-    const dispatch = useDispatch();
-    const likedReviews = useSelector(state => state.cities?.likedReviews || []);
-    const loading = useSelector(state => state.cities?.loading || false);
-
-    useEffect(() => {
-        dispatch(fetchLikedReviews());
-    }, [dispatch]);
-
-    const handleRemoveLike = async (reviewId, e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const token = localStorage.getItem('token');
-        try {
-            const response = await fetch(`http://localhost:8081/review/like?review_id=${reviewId}`, {
-                method: "DELETE",
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-
-            if (response.ok) {
-                dispatch(fetchLikedReviews());
-            }
-        } catch (err) {
-            console.error("Ошибка при удалении лайка:", err);
-        }
-    };
-
-    return (
-        <div className="favorites-panel">
-            <div className="favourites-header">
-                <h2 style={{ fontSize: '2rem' }}>ИЗБРАННОЕ</h2>
-                <button className="close-button" onClick={onClose}>×</button>
-            </div>
-
-            {loading ? (
-                <p style={{ padding: '20px' }}>Загрузка...</p>
-            ) : (
-                <ul className="favorites-list">
-                    {likedReviews.map(review => (
-                        <li key={review.id} className="favorite-review-item">
-                            <Link
-                                to={`/review/${review.id}`}
-                                className="favorite-review-link"
-                                onClick={onClose}
-                            >
-                                <div className="favorite-review-content">
-                                    <h3>{review.city}</h3>
-                                    <span className="review-date">
-                                        {new Date(review.creation_date).toLocaleDateString()}
-                                    </span>
-                                    <p className="preview-text">
-                                        {review.text_start || "Текст отзыва отсутствует"}
-                                    </p>
-                                </div>
-                            </Link>
-
-                            <div className="favorite-like-container">
-                                <button
-                                    className="remove-like-btn"
-                                    onClick={(e) => handleRemoveLike(review.id, e)}
-                                >
-                                    <FcLike size={28} />
-                                </button>
-                            </div>
-                        </li>
-                    ))}
-                    {!loading && likedReviews.length === 0 && (
-                        <p style={{ padding: '20px' }}>Список избранного пуст</p>
-                    )}
-                </ul>
-            )}
-        </div>
-    );
-}
-
-function MyReviewsPanel({ onClose }) {
-    const dispatch = useDispatch();
-    const myReviews = useSelector(state => state.cities?.userReviews || []);
-    const loading = useSelector(state => state.cities?.loading || false);
-
-    useEffect(() => {
-        dispatch(fetchMyReviews());
-    }, [dispatch]);
-    const handleAppeal = async (e, reviewId) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        try {
-            const token = localStorage.getItem('token');
-            const url = `http://localhost:8081/review/status/update?review_id=${reviewId}&status=blocked_reported`;
-
-            const response = await fetch(url, {
-                method: "PATCH",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-            });
-
-            if (!response.ok) throw new Error("Не удалось отправить запрос");
-            dispatch(fetchMyReviews());
-        } catch (err) {
-            alert(err.message);
-        }
-    };
-    return (
-        <div className="my-reviews-panel">
-            <div className="favourites-header" style={{ flexDirection: 'row-reverse' }}>
-                <h2 style={{ fontSize: '2rem' }}>МОИ ОТЗЫВЫ</h2>
-                <button className="close-button" onClick={onClose}>×</button>
-            </div>
-
-            {loading ? (
-                <p style={{ padding: '20px' }}>Загрузка...</p>
-            ) : (
-                <ul className="favorites-list">
-                    {myReviews.map(review => (
-                        <li key={review.id} className="favorite-review-item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
-                            <Link
-                                to={`/review/${review.id}`}
-                                className="favorite-review-link"
-                                onClick={onClose}
-                            >
-                                <div className="favorite-review-content">
-                                    <h3>{review.city}</h3>
-                                    <span className="review-date">
-                                        {new Date(review.creation_date).toLocaleDateString()}
-                                    </span>
-                                    <p className="preview-text">
-                                        {review.text_start || "Текст отсутствует"}
-                                    </p>
-
-                                    <div className="status-badge" style={{
-                                        color: review.status === 'published' ? '#28a745' :
-                                            review.status === 'blocked' ? '#dc3545' : '#ffc107',
-                                        fontSize: '0.9rem', fontWeight: 'bold', marginTop: '5px'
-                                    }}>
-                                        Статус: {
-                                            review.status === 'published' ? 'Опубликован' :
-                                                review.status === 'blocked' ? 'Заблокирован' :
-                                                    review.status === 'blocked_reported' ? 'Ожидает проверки модератором' :
-                                                        'На проверке'
-                                        }
-                                    </div>
-                                </div>
-                            </Link>
-                            {review.status === 'blocked' && (
-                                <button
-                                    onClick={(e) => handleAppeal(e, review.id)}
-                                    style={{
-                                        margin: '0 15px 15px',
-                                        padding: '8px',
-                                        backgroundColor: '#dc3545',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                        fontWeight: 'bold'
-                                    }}
-                                >
-                                    Оспорить решение
-                                </button>
-                            )}
-                        </li>
-                    ))}
-                    {!loading && myReviews.length === 0 && (
-                        <p style={{ padding: '20px' }}>Вы еще не написали ни одного отзыва</p>
-                    )}
-                </ul>
-            )}
-        </div>
-    );
-}
-
-function DraftsPanel({ onClose }) {
-    const dispatch = useDispatch();
-    const drafts = useSelector(state => state.cities?.drafts || []);
-    const loading = useSelector(state => state.cities?.loading || false);
-
-    useEffect(() => {
-        dispatch(fetchDrafts());
-    }, [dispatch]);
-
-    return (
-        <div className="drafts-panel">
-            <div className="favourites-header">
-                <button className="close-button" onClick={onClose}>×</button>
-                <h2 style={{ fontSize: '2rem' }}>ЧЕРНОВИКИ</h2>
-            </div>
-
-            {loading ? (
-                <p style={{ padding: '20px' }}>Загрузка...</p>
-            ) : (
-                <ul className="favorites-list">
-                    {drafts.map(review => (
-                        <li key={review.id} className="favorite-review-item">
-                            <Link
-                                to={`/reviewForm/${review.id}`}
-                                className="favorite-review-link"
-                                onClick={onClose}
-                            >
-                                <div className="favorite-review-content">
-                                    <h3>{review.city}</h3>
-                                    <span className="review-date">
-                                        Сохранен: {new Date(review.creation_date).toLocaleDateString()}
-                                    </span>
-                                    <p className="preview-text">
-                                        {review.text_start || "Текст черновика пуст"}
-                                    </p>
-                                </div>
-                            </Link>
-                        </li>
-                    ))}
-                    {!loading && drafts.length === 0 && (
-                        <p style={{ padding: '20px' }}>Список черновиков пуст</p>
-                    )}
-                </ul>
-            )}
-        </div>
-    );
-}
-
-function getStatusStyles(status) {
-    switch (status) {
-        case 'Новичок':
-            return { borderColor: '#4ed40f', backgroundColor: '#c1f8b0', color: '#06ad00' };
-        case 'Исследователь':
-            return { borderColor: '#ffe371', backgroundColor: '#fcf2b4', color: '#f08e06' };
-        case 'Пилигрим':
-            return { borderColor: '#40c2ff', backgroundColor: '#c3edfc', color: '#14aef5' };
-        case 'Легенда дорог':
-            return { borderColor: '#9c27b0', backgroundColor: '#f3e5f5', color: '#6a1b9a' };
-        case 'Вечный странник':
-            return { borderColor: '#f44336', backgroundColor: '#ffebee', color: '#c62828' };
-        default:
-            return { borderColor: '#ccc', backgroundColor: '#f5f5f5', color: '#666' };
-    }
 }
 
 function UserProfile() {
@@ -330,7 +90,7 @@ function UserProfile() {
                 city: cityObj ? cityObj.id : 0
             }));
 
-            const response = await fetch("http://localhost:8080/user/update", {
+            const response = await fetch(`${API_AUTH_URL}/user/update`, {
                 method: "PUT",
                 headers: { "Authorization": `Bearer ${token}` },
                 body: formData
@@ -363,7 +123,7 @@ function UserProfile() {
                 password: passwords.newPass
             }));
 
-            const response = await fetch("http://localhost:8080/user/update", {
+            const response = await fetch(`${API_AUTH_URL}/user/update`, {
                 method: "PUT",
                 headers: { "Authorization": `Bearer ${token}` },
                 body: formData
@@ -394,7 +154,7 @@ function UserProfile() {
             formData.append("request", JSON.stringify(updateData));
             formData.append(`photo_${fileName}`, file);
 
-            const response = await fetch("http://localhost:8080/user/update", {
+            const response = await fetch(`${API_AUTH_URL}/user/update`, {
                 method: "PUT",
                 headers: { "Authorization": `Bearer ${token}` },
                 body: formData
@@ -546,8 +306,6 @@ function UserProfile() {
                             ))}
                         </ul>
                     )}
-
-
                 </div>
                 {isChanged && (
                     <div style={{

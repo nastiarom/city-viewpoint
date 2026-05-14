@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState } from "react";
 import { useDispatch } from 'react-redux';
-import { setToken, fetchUserProfile } from '/src/store/authSlice';
+import { Link, useNavigate } from "react-router-dom";
 import "./ModeratorAuthorization.css";
+import { API_AUTH_URL } from '/src/config';
+import { fetchUserProfile, setToken } from '/src/store/authSlice';
 
 function ModeratorAuthorization() {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ function ModeratorAuthorization() {
     }
 
     try {
-      const response = await fetch("http://localhost:8080/login", {
+        const response = await fetch(`${API_AUTH_URL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

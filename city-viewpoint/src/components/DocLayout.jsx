@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import bgImage from '/src/assets/reg_background_big.jpg';
 

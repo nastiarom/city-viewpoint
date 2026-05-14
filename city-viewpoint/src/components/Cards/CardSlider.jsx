@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom';
-import "./CardSlider.css"
-import { FcLike } from "react-icons/fc";
+import { useEffect, useState } from 'react';
 import { FaStar } from "react-icons/fa6";
+import { FcLike } from "react-icons/fc";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { useNavigate } from 'react-router-dom';
+import "./CardSlider.css";
 
 function formatDate(dateString) {
     if (!dateString) return "";

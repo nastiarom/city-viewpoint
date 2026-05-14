@@ -1,14 +1,16 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { API_REVIEWS_URL } from '/src/config';
 
 export const fetchCities = createAsyncThunk('cities/fetchAll', async () => {
-  const response = await fetch('http://localhost:8081/city/all');
+  const response = await fetch(`${API_REVIEWS_URL}/city/all`);
   if (!response.ok) throw new Error('Ошибка загрузки городов');
   return await response.json();
 });
+
 export const fetchReviewsByCity = createAsyncThunk(
   'cities/fetchReviews',
   async (cityId) => {
-    const response = await fetch('http://localhost:8081/review/search', {
+    const response = await fetch(`${API_REVIEWS_URL}/review/search`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -28,7 +30,7 @@ export const fetchCityDetails = createAsyncThunk(
   'cities/fetchCityDetails',
   async (cityId, { rejectWithValue }) => {
     try {
-      const response = await fetch(`http://localhost:8081/city?city_id=${cityId}`);
+      const response = await fetch(`${API_REVIEWS_URL}/city?city_id=${cityId}`);
       if (!response.ok) throw new Error('Ошибка при получении данных города');
       return await response.json();
     } catch (error) {
@@ -40,7 +42,7 @@ export const fetchCityDetails = createAsyncThunk(
 export const createReview = createAsyncThunk(
   'cities/createReview',
   async (reviewData) => {
-    const response = await fetch('http://localhost:8081/review/create', {
+    const response = await fetch(`${API_REVIEWS_URL}/review/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -55,7 +57,7 @@ export const createReview = createAsyncThunk(
 export const fetchFilteredReviews = createAsyncThunk(
   'cities/fetchFilteredReviews',
   async (filters) => {
-    const response = await fetch("http://localhost:8081/review/search", {
+    const response = await fetch(`${API_REVIEWS_URL}/review/search`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ filters })
@@ -70,7 +72,7 @@ export const fetchLikedReviews = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const token = getState().auth?.token || localStorage.getItem('token');
-      const response = await fetch('http://localhost:8081/review/liked', {
+      const response = await fetch(`${API_REVIEWS_URL}/review/liked`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -95,8 +97,7 @@ export const fetchMyReviews = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const token = getState().auth?.token || localStorage.getItem('token');
-
-      const response = await fetch('http://localhost:8081/review/user', {
+      const response = await fetch(`${API_REVIEWS_URL}/review/user`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -108,7 +109,6 @@ export const fetchMyReviews = createAsyncThunk(
         const errorText = await response.text();
         throw new Error(`Ошибка ${response.status}: ${errorText}`);
       }
-
       const data = await response.json();
       return data;
     } catch (error) {
@@ -122,7 +122,7 @@ export const fetchDrafts = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const token = getState().auth?.token || localStorage.getItem('token');
-      const response = await fetch('http://localhost:8081/review/drafts', {
+      const response = await fetch(`${API_REVIEWS_URL}/review/drafts`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -141,7 +141,7 @@ export const fetchReviewsByRegion = createAsyncThunk(
   'cities/fetchReviewsByRegion',
   async (region, { rejectWithValue }) => {
     try {
-      const response = await fetch(`http://localhost:8081/review/region?region=${encodeURIComponent(region)}`);
+      const response = await fetch(`${API_REVIEWS_URL}/review/region?region=${encodeURIComponent(region)}`);
 
       if (!response.ok) throw new Error('Ошибка при загрузке отзывов региона');
 

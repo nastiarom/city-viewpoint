@@ -1,15 +1,13 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { FaFilter, FaStar } from 'react-icons/fa';
+import { FcLike } from "react-icons/fc";
+import { useDispatch, useSelector } from 'react-redux';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import BudgetSlider from './BudgetSlider';
+import './ReviewsList.css';
 import ReviewsListHeader from './ReviewsListHeader';
 import Footer from '/src/components/Footer/Footer';
-import { FaStar } from 'react-icons/fa';
-import { FcLike } from "react-icons/fc";
-import { FaFilter } from "react-icons/fa";
-
-import BudgetSlider from './BudgetSlider';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchReviewsByCity, fetchFilteredReviews, fetchReviewsByRegion, fetchCityDetails } from '/src/store/citySlice';
-import './ReviewsList.css'
+import { fetchCityDetails, fetchFilteredReviews, fetchReviewsByCity, fetchReviewsByRegion } from '/src/store/citySlice';
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);

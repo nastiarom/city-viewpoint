@@ -1,9 +1,9 @@
-import './ReviewsListHeader.css'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { useState, useEffect } from 'react'
-import CitySearch from '/src/components/CitySearch/CitySearch'
+import { useEffect, useState } from 'react';
 import { IoChevronBackOutline } from "react-icons/io5";
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import './ReviewsListHeader.css';
+import CitySearch from '/src/components/CitySearch/CitySearch';
 import { fetchCities } from '/src/store/citySlice';
 
 function ReviewsListHeader() {

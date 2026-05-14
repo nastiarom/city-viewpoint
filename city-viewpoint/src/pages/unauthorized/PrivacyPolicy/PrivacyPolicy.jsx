@@ -1,4 +1,5 @@
 import DocLayout from '/src/components/DocLayout';
+
 const sectionStyle = {
     marginBottom: '25px',
     textAlign: 'justify'
@@ -20,6 +21,7 @@ const textStyle = {
     lineHeight: '1.6',
     color: '#333'
 };
+
 export const PrivacyPolicy = () => (
     <DocLayout title="Политика конфиденциальности">
         <section style={sectionStyle}>

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from 'react-redux';
-import './ModeratorProfile.css'
-import { fetchUserProfile, logout } from '/src/store/authSlice';
+import './ModeratorProfile.css';
+import { API_AUTH_URL, API_COMPLAINTS_URL, API_REVIEWS_URL } from '/src/config';
 import { fetchCities } from '/src/store/citySlice';
 
 export default function ModerationProfile() {
@@ -49,10 +49,10 @@ export default function ModerationProfile() {
 
     try {
       if (activeTab === "complaints") {
-        url = "http://localhost:8083/complains/review";
+        url = `${API_COMPLAINTS_URL}/complains/review`;
       } else {
         const status = tabToStatus[activeTab];
-        url = `http://localhost:8081/review/status?status=${status}`;
+        url = `${API_REVIEWS_URL}/review/status?status=${status}`;
       }
 
       const response = await fetch(url, {
@@ -72,7 +72,7 @@ export default function ModerationProfile() {
           rawList.map(async (item) => {
             const rId = item.id || item.review_id;
             try {
-              const res = await fetch(`http://localhost:8081/review/get?review_id=${rId}`);
+              const res = await fetch(`${API_REVIEWS_URL}/review/get?review_id=${rId}`);
               if (res.ok) {
                 const fullReview = await res.json();
                 const cityFromRedux = allCities.find(c => Number(c.id) === Number(fullReview.city_id));
@@ -119,7 +119,7 @@ export default function ModerationProfile() {
     }
     if (!fullReviews[reviewId]) {
       try {
-        const response = await fetch(`http://localhost:8081/review/get?review_id=${reviewId}`);
+        const response = await fetch(`${API_REVIEWS_URL}/review/get?review_id=${reviewId}`);
         if (response.ok) {
           const fullData = await response.json();
           setFullReviews(prev => ({ ...prev, [reviewId]: fullData }));
@@ -135,8 +135,7 @@ export default function ModerationProfile() {
   const handleUpdateStatus = async (reviewId, newStatus) => {
     try {
       const token = localStorage.getItem('token');
-      const url = `http://localhost:8081/review/status/update?review_id=${reviewId}&status=${newStatus}`;
-
+      const url = `${API_REVIEWS_URL}/review/status/update?review_id=${reviewId}&status=${newStatus}`;
       const response = await fetch(url, {
         method: "PATCH",
         headers: {
@@ -189,7 +188,7 @@ export default function ModerationProfile() {
       const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append("request", JSON.stringify({ password: passwords.newPass }));
-      const response = await fetch("http://localhost:8080/user/update", {
+      const response = await fetch(`${API_AUTH_URL}/user/update`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,

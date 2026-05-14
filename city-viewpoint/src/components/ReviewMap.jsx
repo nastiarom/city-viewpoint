@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { YMaps, Map, Placemark } from '@pbe/react-yandex-maps';
+import { Map, Placemark, YMaps } from '@pbe/react-yandex-maps';
 
 function ReviewMap({ places }) {
   if (!places || places.length === 0) return null;

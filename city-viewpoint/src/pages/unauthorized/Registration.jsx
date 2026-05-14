@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import "./Registration.css";
+import defaultAvatar from "/src/assets/avatar.png";
 import bgBig from "/src/assets/reg_background_big.jpg";
 import bgSmall from "/src/assets/reg_background_small.jpg";
-import "./Registration.css";
-import { Link } from 'react-router-dom';
-import defaultAvatar from "/src/assets/avatar.png";
+import { API_AUTH_URL } from '/src/config';
+
 function Registration() {
   const navigate = useNavigate();
-
   const backToHome = () => {
     window.location.href = "/";
   };
@@ -104,7 +104,7 @@ function Registration() {
       const photoFile = await getFileFromAsset(defaultAvatar);
       formData.append(`photo_${fileName}`, photoFile);
 
-      const response = await fetch("http://localhost:8080/register", {
+      const response = await fetch(`${API_AUTH_URL}/register`, {
         method: "POST",
         body: formData,
       });
@@ -125,7 +125,7 @@ function Registration() {
 
   const autoLogin = async () => {
     try {
-      const response = await fetch("http://localhost:8080/login", {
+      const response = await fetch(`${API_AUTH_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -143,6 +143,7 @@ function Registration() {
       console.error("Ошибка авто-логина:", error);
     }
   };
+  
   const handleConfirmSubmit = async (e) => {
     e.preventDefault();
 
@@ -152,7 +153,7 @@ function Registration() {
     }
 
     try {
-      const response = await fetch("http://localhost:8080/verify", {
+      const response = await fetch(`${API_AUTH_URL}/verify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -186,14 +187,14 @@ function Registration() {
 
   const handleResendCode = () => {
     if (!isResendActive) return;
-
     alert(`Код повторно выслан на ${form.email}`);
-
     startTimer();
   };
+
   const goToAuthorization = () => {
     navigate("/authorization");
   };
+
   useEffect(() => {
     return () => {
       if (timerIdRef.current) {

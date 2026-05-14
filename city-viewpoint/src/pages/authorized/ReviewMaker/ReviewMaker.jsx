@@ -1,206 +1,20 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import "./ReviewMaker.css";
+import { useEffect, useState } from "react";
 import { FcLike } from "react-icons/fc";
-import { FaStar } from "react-icons/fa";
-import { useDispatch, useSelector } from 'react-redux';
-import test_photo from "/src/assets/kolomna.jpg"
-import { fetchCities } from '/src/store/citySlice';
 import { IoChevronBackOutline } from "react-icons/io5";
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useParams } from "react-router-dom";
+import { FEATURES, SEASONS, TAGS, TEXT_SECTIONS, TRIP_TYPES } from './constants';
+import "./ReviewMaker.css";
+import { SingleSelectButton, ToggleButton } from './ReviewMakerComponents/FormButtons';
+import PhotoUploader from './ReviewMakerComponents/PhotoUploader';
+import StarRating from './ReviewMakerComponents/StarRating';
+import YandexMap from './ReviewMakerComponents/YandexMap';
 import defaultCityImage from '/src/assets/city.png';
-import { YMaps, Map, Placemark } from '@pbe/react-yandex-maps';
-
-const TAGS = [
-    "Природа",
-    "Спорт",
-    "Еда",
-    "Поездка с детьми",
-    "Паломничество",
-    "Поездка с животными",
-    "Большая компания",
-    "Пляжный отдых",
-    "Кемпинг",
-    "Эко туризм",
-    "Шоппинг",
-    "Достопримечательности",
-    "Музеи",
-    "Фестивали",
-    "Здоровье и СПА",
-    "Ночная жизнь",
-    "Бюджетный отдых"
-];
-
-const FEATURES = [
-    "Путешественники с ограниченными возможностями",
-    "Пожилые путешественники",
-    "Путешественники с ограниченной мобильностью",
-    "Путешественники с особой диетой",
-    "Поездка с животными",
-    "Поездка с младенцем"
-];
-
-const SEASONS = ["Весна", "Лето", "Осень", "Зима"];
-
-const TRIP_TYPES = [
-    "Активная",
-    "Паломническая",
-    "Семейная",
-    "Деловая",
-    "Оздоровительная",
-    "Культурная",
-    "Молодежная",
-    "Романтическая"
-];
-
-const TEXT_SECTIONS = ["Общее", "Еда", "Проживание", "Достопримечательности", "Особенности"];
+import { API_REVIEWS_URL } from '/src/config';
+import { fetchCities } from '/src/store/citySlice';
 
 const MAX_PHOTOS_PER_SECTION = 5;
 const MAX_CUSTOM_SECTIONS = 3;
-function YandexMap({ points, setPoints, center }) {
-    const mapCenter = Array.isArray(center)
-        ? center
-        : [center?.lat || center?.latitude || 55.75, center?.lng || center?.longitude || 37.61];
-
-    const handleMapClick = (e) => {
-        const coords = e.get('coords');
-        setPoints((prev) => [...prev, coords]);
-    };
-
-    return (
-        <div style={{ marginTop: '30px', width: '100%' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '15px', color: '#3a6b00' }}>
-                Отметьте интересные места на карте
-            </h2>
-            <div style={{ width: '100%', height: '450px', borderRadius: '15px', overflow: 'hidden', border: '2px solid #a3c644' }}>
-                <YMaps query={{ lang: 'ru_RU' }}>
-                    <Map
-                        key={`${mapCenter[0]}-${mapCenter[1]}`}
-                        state={{ center: mapCenter, zoom: 12 }}
-                        width="100%"
-                        height="100%"
-                        onClick={handleMapClick}
-                        instanceRef={(ref) => {
-                            if (ref) {
-                                ref.container.fitToViewport();
-                            }
-                        }}
-                    >
-                        {points.map((coords, idx) => (
-                            <Placemark
-                                key={idx}
-                                geometry={coords}
-                                options={{ preset: 'islands#greenDotIcon' }}
-                            />
-                        ))}
-                    </Map>
-                </YMaps>
-            </div>
-        </div>
-    );
-}
-
-function StarRating({ rating, setRating }) {
-    return (
-        <div className="star-rating">
-            {[1, 2, 3, 4, 5].map(star => (
-                <FaStar
-                    key={star}
-                    onClick={() => setRating(star)}
-                    className={star <= rating ? "star filled" : "star"}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`${star} звезд`}
-                    onKeyDown={e => { if (e.key === "Enter") setRating(star); }}
-                />
-            ))}
-        </div>
-    );
-}
-
-function ToggleButton({ selected, onClick, children, className }) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className={`${className} ${selected ? "selected" : ""}`}
-        >
-            {children}
-        </button>
-    );
-}
-
-function SingleSelectButton({ selected, onClick, children, className }) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className={`${className} ${selected ? "selected" : ""}`}
-        >
-            {children}
-        </button>
-    );
-}
-
-function PhotoUploader({ photos = [], setPhotos }) {
-    const MAX = 5;
-    const handleFiles = e => {
-        const files = Array.from(e.target.files);
-        const availableSlots = MAX - photos.length;
-        const newFiles = files.slice(0, availableSlots);
-
-        if (newFiles.length === 0) return;
-
-        const updatedPhotos = [...photos, ...newFiles];
-        setPhotos(updatedPhotos);
-
-        e.target.value = null;
-    };
-
-
-    const removePhoto = index => {
-        setPhotos(prev => prev.filter((_, i) => i !== index));
-    };
-
-    return (
-        <div>
-            <div className="photo-uploader-wrapper">
-                <label className="photo-upload-button">
-                    Выбрать файлы (до {MAX})
-                    <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handleFiles}
-                        hidden
-                        disabled={photos.length >= MAX}
-                    />
-                </label>
-                <span className="photo-upload-text">
-                    {photos.length > 0 ? `Выбрано: ${photos.length}` : "Файлов не выбрано"}
-                </span>
-            </div>
-
-            <div className="photos-preview">
-                {(Array.isArray(photos) ? photos : []).map((file, i) => (
-                    <div key={i} className="photo-wrapper">
-                        <img
-                            src={file instanceof File ? URL.createObjectURL(file) : file}
-                            alt="preview"
-                            className="photo-img"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => removePhoto(i)}
-                            className="photo-remove-button"
-                        >
-                            ×
-                        </button>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
 
 export default function ReviewFormAdvanced() {
     const navigate = useNavigate();
@@ -323,7 +137,7 @@ export default function ReviewFormAdvanced() {
     };
     const fetchDraftData = async (draftId) => {
         try {
-            const response = await fetch(`http://localhost:8081/review/get?review_id=${draftId}`);
+            const response = await fetch(`${API_REVIEWS_URL}/review/get?review_id=${draftId}`);
             if (!response.ok) throw new Error("Не удалось загрузить черновик");
 
             const data = await response.json();
@@ -456,15 +270,16 @@ export default function ReviewFormAdvanced() {
 
             formData.append("review", JSON.stringify(reviewData));
 
-            const response = await fetch("http://localhost:8081/review/create", {
+            const response = await fetch(`${API_REVIEWS_URL}/review/create`, {
                 method: "POST",
                 body: formData,
                 headers: { "Authorization": `Bearer ${token}` }
             });
 
             if (!response.ok) throw new Error("Не удалось сохранить черновик в базу");
+
             if (typeof editingDraftId !== 'undefined' && editingDraftId) {
-                await fetch(`http://localhost:8081/review/delete?review_id=${editingDraftId}`, {
+                await fetch(`${API_REVIEWS_URL}/review/delete?review_id=${editingDraftId}`, {
                     method: "DELETE",
                     headers: { "Authorization": `Bearer ${token}` }
                 });
@@ -563,7 +378,7 @@ export default function ReviewFormAdvanced() {
 
             formData.append("review", JSON.stringify(reviewData));
 
-            const beResponse = await fetch("http://localhost:8081/review/create", {
+            const beResponse = await fetch(`${API_REVIEWS_URL}/review/create`, {
                 method: "POST",
                 body: formData,
                 headers: { "Authorization": `Bearer ${token}` }
@@ -595,7 +410,7 @@ export default function ReviewFormAdvanced() {
             }
 
             if (typeof editingDraftId !== 'undefined' && editingDraftId) {
-                await fetch(`http://localhost:8081/review/delete?review_id=${editingDraftId}`, {
+                await fetch(`${API_REVIEWS_URL}/review/delete?review_id=${editingDraftId}`, {
                     method: "DELETE",
                     headers: { "Authorization": `Bearer ${token}` }
                 });

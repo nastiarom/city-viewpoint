@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import './PopularCities.css';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import './PopularCities.css';
+import { API_REVIEWS_URL } from '/src/config';
 
 function PopularCities() {
   const [popularCities, setPopularCities] = useState([]);
@@ -9,7 +10,7 @@ function PopularCities() {
   useEffect(() => {
     const fetchPopularCities = async () => {
       try {
-        const response = await fetch('http://localhost:8081/city/popular');
+        const response = await fetch(`${API_REVIEWS_URL}/city/popular`);
         if (!response.ok) throw new Error('Ошибка загрузки популярных городов');
 
         const data = await response.json();

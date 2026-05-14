@@ -1,6 +1,4 @@
-import './AuthorizationHeader.css'
 import { Link } from 'react-router-dom'
-
 
 function AuthorizationHeader() {
 

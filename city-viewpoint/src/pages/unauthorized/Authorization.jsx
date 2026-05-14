@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch } from 'react-redux';
 import { useNavigate } from "react-router-dom";
+import { setToken } from '../../store/authSlice';
+import "./Authorization.css";
 import bgBig from "/src/assets/reg_background_big.jpg";
 import bgSmall from "/src/assets/reg_background_small.jpg";
-import "./Authorization.css";
-import { useDispatch } from 'react-redux';
-import { setToken } from '../../store/authSlice';
-import { fetchUserProfile, logout } from '/src/store/authSlice';
+import { fetchUserProfile } from '/src/store/authSlice';
+import { API_AUTH_URL } from '/src/config';
 
 function Authorization() {
   const navigate = useNavigate();
@@ -46,7 +47,7 @@ function Authorization() {
     }
 
     try {
-      const response = await fetch("http://localhost:8080/login", {
+        const response = await fetch(`${API_AUTH_URL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

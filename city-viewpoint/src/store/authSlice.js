@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { API_AUTH_URL } from '/src/config';
 
 export const fetchUserProfile = createAsyncThunk(
   'auth/fetchProfile',
@@ -7,14 +8,14 @@ export const fetchUserProfile = createAsyncThunk(
       const token = localStorage.getItem('token');
 
       if (!token) throw new Error("Нет данных для авторизации");
-      const response = await fetch(`http://localhost:8080/user/token`, {
+      const response = await fetch(`${API_AUTH_URL}/user/token`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`
         }
       });
       if (!response.ok) throw new Error("Не удалось загрузить профиль");
-      return await response.json(); 
+      return await response.json();
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -31,9 +32,9 @@ const authSlice = createSlice({
   },
   reducers: {
     logout: (state) => {
-    state.token = null;
-    state.user = null;
-    state.isAuth = false;
+      state.token = null;
+      state.user = null;
+      state.isAuth = false;
     },
     setToken: (state, action) => {
       localStorage.setItem('token', action.payload);

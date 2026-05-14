@@ -1,4 +1,3 @@
-import React from 'react';
 import { Range } from 'react-range';
 
 const STEP = 1000;

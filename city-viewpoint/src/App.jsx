@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import './App.css';
-import Footer from './components/Footer/Footer';
-import Header from './components/Header/Header';
 import { Grid } from '@mui/material';
-import PopularCities from './components/PopularCities/PopularCities';
+import { YMaps } from '@pbe/react-yandex-maps';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import './App.css';
 import CardSlider from './components/Cards/CardSlider';
 import CityModal from './components/CityModal/CityModal';
 import CitySearch from './components/CitySearch/CitySearch';
-import { useDispatch, useSelector } from 'react-redux';
+import Footer from './components/Footer/Footer';
+import Header from './components/Header/Header';
+import PopularCities from './components/PopularCities/PopularCities';
 import { fetchCities } from './store/citySlice';
-import { useNavigate } from 'react-router-dom';
-import { YMaps } from '@pbe/react-yandex-maps';
-import { MarginTwoTone } from '@mui/icons-material';
+import { API_REVIEWS_URL } from '/src/config';
 
 const items = [
   { text: 'Города', color: '#44a7e9ff' },
@@ -40,7 +40,6 @@ function App() {
   const [activeMenu, setActiveMenu] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState('');
 
-
   const handleItemClick = (text) => {
     if (text === 'Города') {
       setSearchModalOpen(true);
@@ -56,10 +55,9 @@ function App() {
     navigate('/reviewsList', { state: { quickFilter: { type, value } } });
   };
 
-
   const fetchPopularGeneral = async () => {
     try {
-      const response = await fetch("http://localhost:8081/review/popular", {
+      const response = await fetch(`${API_REVIEWS_URL}/review/popular`, {
         method: "GET",
         headers: { "Content-Type": "application/json" }
       });
@@ -82,7 +80,7 @@ function App() {
     }
 
     try {
-      const response = await fetch("http://localhost:8081/review/closest", {
+      const response = await fetch(`${API_REVIEWS_URL}/review/closest`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -159,7 +157,6 @@ function App() {
     }
   };
 
-
   const confirmCity = () => {
     localStorage.setItem('userCity', JSON.stringify(detectedCity));
     setShowGeoConfirmation(false);
@@ -188,7 +185,6 @@ function App() {
       fetchPopularClosest(cityData);
     }
   };
-
 
   return (
     <YMaps query={{ lang: 'ru_RU', load: 'package.full' }}>

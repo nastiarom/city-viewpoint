@@ -1,76 +1,19 @@
-import { useParams } from 'react-router-dom';
-import ReviewHeader from '/src/components/ReviewHeader/ReviewHeader';
-import Footer from '../../../components/Footer/Footer';
-import { FaStar } from 'react-icons/fa';
-import { TbMoneybag } from "react-icons/tb";
+import html2pdf from 'html2pdf.js';
+import { useEffect, useMemo, useState } from 'react';
 import { FaRankingStar } from "react-icons/fa6";
 import { FcLike } from "react-icons/fc";
-import './Review.css';
-import { useState, useEffect, useRef, useMemo } from 'react';
-import ReviewMap from '../../../components/ReviewMap';
+import { TbMoneybag } from "react-icons/tb";
 import { useSelector } from 'react-redux';
-import html2pdf from 'html2pdf.js';
-import default_user_photo from '/src/assets/avatar.png'
-
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  return `${day}.${month}.${year}`;
-}
-
-function Stars({ rating }) {
-  const totalStars = 5;
-
-  return (
-    <span style={{ marginLeft: '0.5rem' }}>
-      {[...Array(totalStars)].map((_, i) => (
-        <FaStar
-          key={i}
-          style={{ color: i < rating ? '#f5ce0bff' : '#ccc', fontSize: '1.8rem' }}
-        />
-      ))}
-    </span>
-  );
-}
-
-function getSeasonClass(season) {
-  switch (season.toLowerCase()) {
-    case 'весна':
-    case 'spring':
-      return 'season-spring';
-    case 'лето':
-    case 'summer':
-      return 'season-summer';
-    case 'осень':
-    case 'autumn':
-    case 'fall':
-      return 'season-autumn';
-    case 'зима':
-    case 'winter':
-      return 'season-winter';
-    default:
-      return '';
-  }
-}
-
-function getStatusStyles(status) {
-  switch (status) {
-    case 'Новичок':
-      return { borderColor: '#4ed40f', backgroundColor: '#c1f8b0', color: '#06ad00' };
-    case 'Исследователь':
-      return { borderColor: '#ffe371', backgroundColor: '#fcf2b4', color: '#f0c000' };
-    case 'Пилигрим':
-      return { borderColor: '#40c2ff', backgroundColor: '#c3edfc', color: '#14aef5' };
-    case 'Легенда дорог':
-      return { borderColor: '#9c27b0', backgroundColor: '#f3e5f5', color: '#6a1b9a' };
-    case 'Вечный странник':
-      return { borderColor: '#f44336', backgroundColor: '#ffebee', color: '#c62828' };
-    default:
-      return { borderColor: '#ccc', backgroundColor: '#f5f5f5', color: '#666' };
-  }
-}
+import { useParams } from 'react-router-dom';
+import Footer from '../../../components/Footer/Footer';
+import ReviewMap from '../../../components/ReviewMap';
+import './Review.css';
+import Stars from './ReviewComponents/Stars';
+import getSeasonClass from './ReviewComponents/getSeasons';
+import getStatusStyles from './ReviewComponents/getStatusStyle';
+import default_user_photo from '/src/assets/avatar.png';
+import ReviewHeader from '/src/components/ReviewHeader/ReviewHeader';
+import { API_AUTH_URL, API_REVIEWS_URL, API_COMMENTS_URL, API_COMPLAINTS_URL} from '/src/config';
 
 function Review() {
   const { id } = useParams();
@@ -105,20 +48,19 @@ function Review() {
     const fetchReviewData = async () => {
       try {
         setLoading(true);
-
-        const reviewRes = await fetch(`http://localhost:8081/review/get?review_id=${id}`);
+        const reviewRes = await fetch(`${API_REVIEWS_URL}/review/get?review_id=${id}`);
         if (!reviewRes.ok) throw new Error("Отзыв не найден");
         const reviewData = await reviewRes.json();
         setFullReview(reviewData);
 
         if (reviewData.author_id) {
-          const authorRes = await fetch(`http://localhost:8080/user?user_id=${reviewData.author_id}`);
+          const authorRes = await fetch(`${API_AUTH_URL}/user?user_id=${reviewData.author_id}`);
           if (authorRes.ok) {
             const authorData = await authorRes.json();
             setAuthor(authorData);
           }
         }
-        const commentsRes = await fetch(`http://localhost:8082/comments/get?review_id=${id}`);
+        const commentsRes = await fetch(`${API_COMMENTS_URL}/comments/get?review_id=${id}`);
         if (commentsRes.ok) {
           const commentsData = await commentsRes.json();
           setComments(commentsData);
@@ -133,6 +75,7 @@ function Review() {
     fetchReviewData();
   }, [id]);
 
+
   useEffect(() => {
     if (fullReview) {
       setLikesCount(fullReview.likes_number || 0);
@@ -144,7 +87,7 @@ function Review() {
       if (!isAuth) return;
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:8081/review/like?review_id=${id}`, {
+        const response = await fetch(`${API_REVIEWS_URL}/review/like?review_id=${id}`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
         if (response.ok) {
@@ -171,7 +114,7 @@ function Review() {
 
       await Promise.all(uniqueUserIds.map(async (uid) => {
         try {
-          const res = await fetch(`http://localhost:8080/user?user_id=${uid}`);
+          const res = await fetch(`${API_AUTH_URL}/user?user_id=${uid}`);
           if (res.ok) {
             const userData = await res.json();
             newUsers[uid] = userData;
@@ -200,8 +143,8 @@ function Review() {
     setIsLiked(!wasLiked);
     setLikesCount(prev => wasLiked ? Math.max(0, prev - 1) : prev + 1);
 
-    try {
-      const response = await fetch(`http://localhost:8081/review/like?review_id=${id}`, {
+try {
+      const response = await fetch(`${API_REVIEWS_URL}/review/like?review_id=${id}`, {
         method: method,
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -210,7 +153,7 @@ function Review() {
         throw new Error("Ошибка сервера при лайке");
       }
 
-      const reviewRes = await fetch(`http://localhost:8081/review/get?review_id=${id}`);
+      const reviewRes = await fetch(`${API_REVIEWS_URL}/review/get?review_id=${id}`);
       if (reviewRes.ok) {
         const updatedData = await reviewRes.json();
         setLikesCount(updatedData.likes_number);
@@ -260,7 +203,7 @@ function Review() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch("http://localhost:8083/complaint/create/review", {
+      const response = await fetch(`${API_COMPLAINTS_URL}/complaint/create/review`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -288,8 +231,7 @@ function Review() {
 
     try {
       const token = localStorage.getItem('token');
-
-      const response = await fetch(`http://localhost:8082/comment/create?review_id=${id}`, {
+      const response = await fetch(`${API_COMMENTS_URL}/comment/create?review_id=${id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -331,7 +273,6 @@ function Review() {
 
         if (isPublished || attempts >= 15) {
           clearInterval(interval);
-          console.log(isPublished ? `[OK] Коммент ${commentId} появился!` : "[TIMEOUT]");
         }
       }, 2000);
     } catch (err) {
@@ -435,7 +376,7 @@ function Review() {
 
   const refreshComments = async () => {
     try {
-      const res = await fetch(`http://localhost:8082/comments/get?review_id=${id}`);
+      const res = await fetch(`${API_COMMENTS_URL}/comments/get?review_id=${id}`);
       if (res.ok) {
         const data = await res.json();
         setComments(data);

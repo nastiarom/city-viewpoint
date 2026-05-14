@@ -1,10 +1,10 @@
-import './Header.css'
-import { Link } from 'react-router-dom'
-import logo from '/src/assets/logo.png'
-import { useState, useEffect } from 'react'
-import CitySearch from '../CitySearch/CitySearch'
+import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { Link } from 'react-router-dom'
 import { fetchCities } from '../../store/citySlice'
+import CitySearch from '../CitySearch/CitySearch'
+import './Header.css'
+import logo from '/src/assets/logo.png'
 
 function Header({ userCity }) {
   const [menuOpen, setMenuOpen] = useState(false)
